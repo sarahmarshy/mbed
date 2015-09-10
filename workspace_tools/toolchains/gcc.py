@@ -30,6 +30,13 @@ class GCC(mbedToolchain):
     CIRCULAR_DEPENDENCIES = True
     DIAGNOSTIC_PATTERN = re.compile('((?P<line>\d+):)(\d+:)? (?P<severity>warning|error): (?P<message>.+)')
 
+    COMMON_FLAGS = ["-c", "-Wall", "-Wextra",
+            "-Wno-unused-parameter", "-Wno-missing-field-initializers",
+            "-fmessage-length=0", "-fno-exceptions", "-fno-builtin",
+            "-ffunction-sections", "-fdata-sections",
+            "-MMD", "-fno-delete-null-pointer-checks", "-fomit-frame-pointer"]
+
+
     def __init__(self, target, options=None, notify=None, macros=None, silent=False, tool_path=""):
         mbedToolchain.__init__(self, target, options, notify, macros, silent)
 
@@ -62,38 +69,30 @@ class GCC(mbedToolchain):
 
         # Note: We are using "-O2" instead of "-Os" to avoid this known GCC bug:
         # http://gcc.gnu.org/bugzilla/show_bug.cgi?id=46762
-        self.common_flags = ["-c", "-Wall", "-Wextra",
-            "-Wno-unused-parameter", "-Wno-missing-field-initializers",
-            "-fmessage-length=0", "-fno-exceptions", "-fno-builtin",
-            "-ffunction-sections", "-fdata-sections",
-            "-MMD", "-fno-delete-null-pointer-checks", "-fomit-frame-pointer"]
-
-        common_flags = self.common_flags + self.cpu
+        #common_flags = self.COMMON_FLAGS + self.cpu
 
         if "save-asm" in self.options:
-            common_flags.append("-save-temps")
+            self.COMMON_FLAGS.append("-save-temps")
 
         if "debug-info" in self.options:
-            common_flags.append("-g")
-            common_flags.append("-O0")
-            self.common_flags.append("-g")
-            self.optimization = "-O0"
+            self.COMMON_FLAGS.append("-g")
+            self.COMMON_FLAGS.append("-O0")
         else:
-            common_flags.append("-O2")
-            self.optimization = "-O2"
+            self.COMMON_FLAGS.append("-O2")
 
         main_cc = join(tool_path, "arm-none-eabi-gcc")
         main_cppc = join(tool_path, "arm-none-eabi-g++")
-        self.asm = [main_cc, "-x", "assembler-with-cpp"] + common_flags
+        self.asm = [main_cc, "-x", "assembler-with-cpp"] + self.COMMON_FLAGS + self.cpu
         if not "analyze" in self.options:
-            self.cc  = [main_cc, "-std=gnu99"] + common_flags
-            self.cppc =[main_cppc, "-std=gnu++98", "-fno-rtti"] + common_flags
+            self.cc  = [main_cc, "-std=gnu99"] + self.COMMON_FLAGS + self.cpu
+            self.COMMON_FLAGS.append("-fno-rtti")
+            self.cppc =[main_cppc, "-std=gnu++98"] + self.COMMON_FLAGS + self.cpu
         else:
-            self.cc  = [join(GOANNA_PATH, "goannacc"), "--with-cc=" + main_cc.replace('\\', '/'), "-std=gnu99", "--dialect=gnu", '--output-format="%s"' % self.GOANNA_FORMAT] + common_flags
-            self.cppc= [join(GOANNA_PATH, "goannac++"), "--with-cxx=" + main_cppc.replace('\\', '/'), "-std=gnu++98", "-fno-rtti", "--dialect=gnu", '--output-format="%s"' % self.GOANNA_FORMAT] + common_flags
+            self.cc  = [join(GOANNA_PATH, "goannacc"), "--with-cc=" + main_cc.replace('\\', '/'), "-std=gnu99", "--dialect=gnu", '--output-format="%s"' % self.GOANNA_FORMAT] + self.COMMON_FLAGS + self.cpu
+            self.cppc= [join(GOANNA_PATH, "goannac++"), "--with-cxx=" + main_cppc.replace('\\', '/'), "-std=gnu++98", "-fno-rtti", "--dialect=gnu", '--output-format="%s"' % self.GOANNA_FORMAT] + self.COMMON_FLAGS + self.cpu
 
-        self.ld = [join(tool_path, "arm-none-eabi-gcc"), "-Wl,--gc-sections", "-Wl,--wrap,main"] + self.cpu
         self.linker_options = ["-Wl,--gc-sections", "-Wl,--wrap,main"]
+        self.ld = [join(tool_path, "arm-none-eabi-gcc"), "-Wl,--gc-sections", "-Wl,--wrap,main"] + self.cpu
 
         self.sys_libs = ["stdc++", "supc++", "m", "c", "gcc"]
 
@@ -102,8 +101,7 @@ class GCC(mbedToolchain):
 
     def yaml_options(self):
         options = {'libraries':self.sys_libs,
-                   'optimization_level':self.optimization,
-                   'compiler_options':self.common_flags,
+                   'compiler_options':self.COMMON_FLAGS,
                    'linker_options':self.linker_options,
                    'instruction_mode':self.instruction_mode}
         return options
@@ -249,14 +247,14 @@ class GCC_CW_EWL(GCC_CW):
         GCC_CW.__init__(self, target, options, notify, macros, silent)
 
         # Compiler
-        common = [
+        self.COMMON_FLAGS = [
             '-mfloat-abi=soft',
             '-nostdinc', '-I%s' % join(CW_EWL_PATH, "EWL_C", "include"),
         ]
-        self.cc += common + [
+        self.cc += self.COMMON_FLAGS + [
             '-include', join(CW_EWL_PATH, "EWL_C", "include", 'lib_c99.prefix')
         ]
-        self.cppc += common + [
+        self.cppc += self.COMMON_FLAGS + [
             '-nostdinc++', '-I%s' % join(CW_EWL_PATH, "EWL_C++", "include"),
             '-include', join(CW_EWL_PATH, "EWL_C++", "include", 'lib_ewl_c++.prefix')
         ]
