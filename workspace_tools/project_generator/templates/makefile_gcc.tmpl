@@ -1,0 +1,135 @@
+#
+# Copyright (c) 2014-2015 0xc0170
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# This project was exported via the project generator.  More information https://github.com/project-generator/project_generator
+
+TOOLCHAIN = arm-none-eabi-
+PROJECT = {{name}}
+SYS_OBJECTS = {% for file in source_files_obj %}{{file}} {% endfor %}
+INCLUDE_PATHS = {% for path in includes %}-I{{path}} {% endfor %}
+LIBRARY_PATHS = {% for path in lib_paths %}-L{{path}} {% endfor %}
+LIBRARIES = {% for library in libraries %} -l{{library}} {% endfor %}
+LINKER_SCRIPT = {{linker_file}}
+SRC_DIRS = {% for path in source_paths %}{{path}} {% endfor %}
+
+
+OUT_DIR = bin
+OBJ_FOLDER = $(strip $(OUT_DIR))/
+FILE_DIR = build
+FILE_FOLDER = $(strip $(FILE_DIR))/
+
+C_SRCS := {% for file in source_files_c %}{{file}} {% endfor %}
+CPP_SRCS := {% for file in source_files_cpp %}{{file}} {% endfor %}
+S_SRCS := {% for file in source_files_s %}{% if file[-1] == 's' %}{{file}} {% endif %} {% endfor %}
+SS_SRCS := {% for file in source_files_s %}{% if file[-1] == 'S' %}{{file}} {% endif %} {% endfor %}
+
+func = $(patsubst %$(1),$(FILE_FOLDER)%.o,$(notdir $(2)))
+OBJECTS = $(call func,.c,$(C_SRCS)) $(call func,.cpp,$(CPP_SRCS)) $(call func,.s,$(S_SRCS)) $(call func,.S,$(SS_SRCS))
+
+###############################################################################
+AS      = $(GCC_BIN)$(TOOLCHAIN)as
+CC      = $(GCC_BIN)$(TOOLCHAIN)gcc
+CPP     = $(GCC_BIN)$(TOOLCHAIN)g++
+LD      = $(GCC_BIN)$(TOOLCHAIN)gcc
+OBJCOPY = $(GCC_BIN)$(TOOLCHAIN)objcopy
+OBJDUMP = $(GCC_BIN)$(TOOLCHAIN)objdump
+SIZE    = $(GCC_BIN)$(TOOLCHAIN)size
+ifeq ($(OS),Windows_NT)
+	SHELL = cmd
+endif
+
+ifeq ($(HARDFP),1)
+	FLOAT_ABI = hard
+else
+	FLOAT_ABI = softfp
+endif
+
+FPU = {{fpu}}
+CPU = -mcpu={{core}} -m{{instruction_mode}} -mfloat-abi=$(FLOAT_ABI)
+{% if fpu %}
+	CPU += -mfpu=$(FPU)
+{% endif %}
+CC_FLAGS = $(CPU) {% for option in compiler_options %} -{{option}} {% endfor %}
+CC_SYMBOLS = {% for symbol in macros %} -D{{symbol}} {% endfor %}
+
+LD_FLAGS = $(CPU) {% for option in linker_options %}{{option}} {% endfor %}-Wl,-Map=$(OBJ_FOLDER)$(PROJECT).map,--cref
+
+
+ifeq ($(DEBUG), 1)
+  CC_FLAGS += -DDEBUG -O0
+else
+  CC_FLAGS += -DNDEBUG -Os
+endif
+
+VPATH := $(SRC_DIRS)
+
+$(FILE_FOLDER)%.o : %.asm
+	@echo 'Building file: $(@F)'
+	$(CC) $(CPU) -c -x assembler-with-cpp -o $@ $<
+
+$(FILE_FOLDER)%.o : %.S
+	@echo 'Building file: $(@F)'
+	$(CC) $(CPU) -c -x assembler-with-cpp -o $@ $<
+
+$(FILE_FOLDER)%.o : %.s
+	@echo 'Building file: $(@F)'
+	$(CC) $(CPU) -c -x assembler-with-cpp -o $@ $<
+
+$(FILE_FOLDER)%.o : %.c
+	@echo 'Building file: $(@F)'
+	$(CC)  $(CC_FLAGS) $(CC_SYMBOLS) -std=gnu99   $(INCLUDE_PATHS) -o $@ $<
+
+$(FILE_FOLDER)%.o : %.cpp
+	@echo 'Building file: $(@F)'
+	$(CPP) $(CC_FLAGS) $(CC_SYMBOLS) -std=gnu++98 -fno-rtti $(INCLUDE_PATHS) -o $@ $<
+
+all: create_outputdir $(OBJ_FOLDER)$(PROJECT).bin $(OBJ_FOLDER)$(PROJECT).hex size
+
+create_outputdir:
+ifeq ($(OS),Windows_NT)
+	mkdir $(OUT_DIR)
+	mkdir $(FILE_DIR)
+else
+	$(shell mkdir $(OUT_DIR) 2>/dev/null)
+	$(shell mkdir $(FILE_DIR) 2>/dev/null)
+endif
+
+clean:
+	rm -f $(OBJ_FOLDER)$(PROJECT).bin $(OBJ_FOLDER)$(PROJECT).elf $(OBJ_FOLDER)$(PROJECT).hex $(OBJ_FOLDER)$(PROJECT).map $(OBJ_FOLDER)$(PROJECT).lst $(OBJECTS) $(DEPS)
+
+$(OBJ_FOLDER)$(PROJECT).elf: $(OBJECTS) $(SYS_OBJECTS)
+	@echo 'Invoking: MCU Linker'
+	$(LD) $(LD_FLAGS) -T$(LINKER_SCRIPT) $(LIBRARY_PATHS) -o $@ $^ $(LIBRARIES)
+
+
+$(OBJ_FOLDER)$(PROJECT).bin: $(OBJ_FOLDER)$(PROJECT).elf
+	$(OBJCOPY) -O binary $< $@
+
+$(OBJ_FOLDER)$(PROJECT).hex: $(OBJ_FOLDER)$(PROJECT).elf
+	@$(OBJCOPY) -O ihex $< $@
+
+$(OBJ_FOLDER)$(PROJECT).lst: $(OBJ_FOLDER)$(PROJECT).elf
+	@$(OBJDUMP) -Sdh $< > $@
+
+lst: $(OBJ_FOLDER)$(PROJECT).lst
+
+size: $(OBJ_FOLDER)$(PROJECT).elf
+	$(SIZE) $(OBJ_FOLDER)$(PROJECT).elf
+
+DEPS = $(OBJECTS:.o=.d) $(SYS_OBJECTS:.o=.d)
+-include $(DEPS)
+
+.PHONY: all clean lst size
+

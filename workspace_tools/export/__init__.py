@@ -15,26 +15,25 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 import os, tempfile
-from os.path import join, exists, basename
+from os.path import join, exists, basename, dirname
 from shutil import copytree, rmtree, copy
+import yaml
 
 from workspace_tools.utils import mkdir
-from workspace_tools.export import uvision4, codesourcery, codered, gccarm, ds5_5, iar, emblocks, coide, kds, zip, simplicityv3
-from workspace_tools.export.exporters import zip_working_directory_and_clean_up, OldLibrariesException
+from workspace_tools.export import zip
+from workspace_tools.export.exporters import Exporter, zip_working_directory_and_clean_up
+from workspace_tools.export import uvision4, gccarm,iar
 from workspace_tools.targets import TARGET_NAMES, EXPORT_MAP
+
+
 
 EXPORTERS = {
     'uvision': uvision4.Uvision4,
-    'lpcxpresso': codered.CodeRed,
-    'codesourcery': codesourcery.CodeSourcery,
     'gcc_arm': gccarm.GccArm,
-    'ds5_5': ds5_5.DS5_5,
-    'iar': iar.IAREmbeddedWorkbench,
-    'emblocks' : emblocks.IntermediateFile,
-    'coide' : coide.CoIDE,
-    'kds' : kds.KDS,
-    'simplicityv3' : simplicityv3.SimplicityV3,
+    'iar': iar.IAREmbeddedWorkbench
 }
+
+
 
 ERROR_MESSAGE_UNSUPPORTED_TOOLCHAIN = """
 Sorry, the target %s is not currently supported on the %s toolchain.
@@ -53,46 +52,64 @@ def online_build_url_resolver(url):
 def export(project_path, project_name, ide, target, destination='/tmp/',
            tempdir=None, clean=True, extra_symbols=None, build_url_resolver=online_build_url_resolver):
     # Convention: we are using capitals for toolchain and target names
-    if target is not None:
-        target = target.upper()
 
     if tempdir is None:
         tempdir = tempfile.mkdtemp()
 
     report = {'success': False}
-    if ide is None or ide == "zip":
-        # Simple ZIP exporter
-        try:
-            ide = "zip"
-            exporter = zip.ZIP(target, tempdir, project_name, build_url_resolver, extra_symbols=extra_symbols)
-            exporter.scan_and_copy_resources(project_path, tempdir)
-            exporter.generate()
-            report['success'] = True
-        except OldLibrariesException, e:
-            report['errormsg'] = ERROR_MESSAGE_NOT_EXPORT_LIBS
+
+    if ide not in EXPORTERS:
+        report["errormsg"] = "Unsupported toolchain"
     else:
-        if ide not in EXPORTERS:
-            report['errormsg'] = "Unsupported toolchain"
-        else:
-            Exporter = EXPORTERS[ide]
-            target = EXPORT_MAP.get(target, target)
-            if target not in Exporter.TARGETS:
-                report['errormsg'] = ERROR_MESSAGE_UNSUPPORTED_TOOLCHAIN % (target, ide)
-            else:
-                try:
-                    exporter = Exporter(target, tempdir, project_name, build_url_resolver, extra_symbols=extra_symbols)
-                    exporter.scan_and_copy_resources(project_path, tempdir)
-                    exporter.generate()
-                    report['success'] = True
-                except OldLibrariesException, e:
-                    report['errormsg'] = ERROR_MESSAGE_NOT_EXPORT_LIBS
+        Exporter = EXPORTERS[ide]
+
+    exporter = Exporter(target, build_url_resolver, extra_symbols)
+    exporter.scan_and_copy_resources(project_path, tempdir)
+
+    macro_yaml = {'macros':[]}
+    macro_yaml['macros'].extend(exporter.get_symbols())
+
+    macro_file_path = os.path.join(tempdir, "%s_macros.yaml"%target)
+    with open(macro_file_path, 'w+') as f:
+        f.write(yaml.dump(macro_yaml))
+
+    current = os.getcwd()
+    pgen_path = os.path.relpath("project_generator/main.py",tempdir)
+    os.chdir(tempdir)
+    pgen_command = "create -p %s -m %s"%(project_name, target)
+    cmdline = "python %s %s"%(pgen_path,pgen_command)
+    if os.system(cmdline) != 0:
+        report["errormsg"] = "Could not create yaml"
+
+    pgen_command = "-v generate -p %s -d %s -t %s"%(project_name, ide, macro_file_path)
+
+    ide_settings = exporter.toolchain.yaml_options()
+    if ide_settings is not None:
+        settings_file_path = os.path.join(tempdir, "ide_settings.yaml")
+        with open(settings_file_path, 'w+') as f:
+            f.write(yaml.dump(ide_settings))
+
+        pgen_command += " -s %s"%settings_file_path
+
+    cmdline = "python %s %s"%(pgen_path,pgen_command)
+    print cmdline
+    if os.system(cmdline) != 0:
+        report["errormsg"] = "Could not generate project file"
+    report["success"] = True
+    os.chdir(current)
+
+    #copy(".project.yaml",tempdir)
+    #copy(".projects.yaml",tempdir)
+
+    #os.remove(".project.yaml")
+   # os.remove(".projects.yaml")
 
     zip_path = None
-    if report['success']:
+    if report["success"]:
         # add readme file to every offline export.
         open(os.path.join(tempdir, 'GettingStarted.htm'),'w').write('<meta http-equiv="refresh" content="0; url=http://mbed.org/handbook/Getting-Started-mbed-Exporters#%s"/>'% (ide))
         # copy .hgignore file to exported direcotry as well.
-        copy(os.path.join(exporter.TEMPLATE_DIR,'.hgignore'),tempdir)
+        copy(os.path.join(dirname(__file__),'.hgignore'),tempdir)
         zip_path = zip_working_directory_and_clean_up(tempdir, destination, project_name, clean)
 
     return zip_path, report

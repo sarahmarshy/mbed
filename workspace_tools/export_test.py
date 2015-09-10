@@ -77,37 +77,6 @@ if __name__ == '__main__':
     setup_test_user_prj()
 
     for toolchain, target in [
-            ('zip', 'LPC1768'),
-            
-            ('emblocks', 'LPC1768'),
-            ('emblocks', 'LPC1549'),
-            ('emblocks', 'LPC1114'),
-            ('emblocks', 'LPC11U35_401'),
-            ('emblocks', 'LPC11U35_501'),
-            ('emblocks', 'LPCCAPPUCCINO'),
-            ('emblocks', 'LPC2368'),
-            ('emblocks', 'STM32F407'),
-            ('emblocks', 'DISCO_F100RB'),
-            ('emblocks', 'DISCO_F051R8'),
-            ('emblocks', 'DISCO_F407VG'),
-            ('emblocks', 'DISCO_F303VC'),
-            ('emblocks', 'NRF51822'),
-            ('emblocks', 'NUCLEO_F401RE'),
-            ('emblocks', 'NUCLEO_F411RE'),
-            ('emblocks', 'MTS_MDOT_F405RG'),
-            ('emblocks', 'MTS_MDOT_F411RE'),
-
-            ('coide', 'KL05Z'),
-            ('coide', 'KL25Z'),
-            ('coide', 'LPC1768'),
-            ('coide', 'ARCH_PRO'),
-            ('coide', 'DISCO_F407VG'),
-            ('coide', 'NUCLEO_F401RE'),
-            ('coide', 'NUCLEO_F411RE'),
-            ('coide', 'DISCO_F429ZI'),
-            ('coide', 'NUCLEO_F334R8'),
-            ('coide', 'MTS_MDOT_F405RG'),
-            ('coide', 'MTS_MDOT_F411RE'),
 
             ('uvision', 'LPC1768'),
             ('uvision', 'LPC11U24'),
@@ -140,19 +109,6 @@ if __name__ == '__main__':
             ('uvision', 'DISCO_F334C8'),
             ('uvision', 'DISCO_F746NG'),
             ('uvision', 'DISCO_L476VG'),
-
-            ('lpcxpresso', 'LPC1768'),
-            ('lpcxpresso', 'LPC4088'),
-            ('lpcxpresso', 'LPC4088_DM'),
-            ('lpcxpresso', 'LPC1114'),
-            ('lpcxpresso', 'LPC11U35_401'),
-            ('lpcxpresso', 'LPC11U35_501'),
-            ('lpcxpresso', 'LPCCAPPUCCINO'),
-            ('lpcxpresso', 'LPC1549'),
-            ('lpcxpresso', 'LPC11U68'),
-            # Linux path: /home/emimon01/bin/gcc-cs/bin/
-            # Windows path: "C:/Program Files (x86)/CodeSourcery/Sourcery_CodeBench_Lite_for_ARM_EABI/bin/"
-            ('codesourcery', 'LPC1768'),
 
             # Linux path: /home/emimon01/bin/gcc-arm/bin/
             # Windows path: C:/arm-none-eabi-gcc-4_7/bin/
@@ -206,8 +162,6 @@ if __name__ == '__main__':
             ('gcc_arm', 'EFM32WG_STK3800'),
             ('gcc_arm', 'EFM32ZG_STK3200'),
             ('gcc_arm', 'EFM32HG_STK3400'),
-
-            ('ds5_5', 'LPC1768'), ('ds5_5', 'LPC11U24'),
 
             ('iar', 'LPC1768'),
             ('iar', 'LPC4088_DM'),

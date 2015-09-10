@@ -40,15 +40,18 @@ class GCC(mbedToolchain):
         else:
             cpu = target.core.lower()
 
+        self.instruction_mode = None
         self.cpu = ["-mcpu=%s" % cpu]
         if target.core.startswith("Cortex"):
             self.cpu.append("-mthumb")
+            self.instruction_mode = "thumb"
 
         if target.core == "Cortex-M4F":
             self.cpu.append("-mfpu=fpv4-sp-d16")
             self.cpu.append("-mfloat-abi=softfp")
 
         if target.core == "Cortex-A9":
+            self.instruction_mode = "thumb-interwork"
             self.cpu.append("-mthumb-interwork")
             self.cpu.append("-marm")
             self.cpu.append("-march=armv7-a")
@@ -59,12 +62,13 @@ class GCC(mbedToolchain):
 
         # Note: We are using "-O2" instead of "-Os" to avoid this known GCC bug:
         # http://gcc.gnu.org/bugzilla/show_bug.cgi?id=46762
-        common_flags = ["-c", "-Wall", "-Wextra",
+        self.common_flags = ["-c", "-Wall", "-Wextra",
             "-Wno-unused-parameter", "-Wno-missing-field-initializers",
             "-fmessage-length=0", "-fno-exceptions", "-fno-builtin",
             "-ffunction-sections", "-fdata-sections",
-            "-MMD", "-fno-delete-null-pointer-checks", "-fomit-frame-pointer"
-            ] + self.cpu
+            "-MMD", "-fno-delete-null-pointer-checks", "-fomit-frame-pointer"]
+
+        common_flags = self.common_flags + self.cpu
 
         if "save-asm" in self.options:
             common_flags.append("-save-temps")
@@ -72,8 +76,11 @@ class GCC(mbedToolchain):
         if "debug-info" in self.options:
             common_flags.append("-g")
             common_flags.append("-O0")
+            self.common_flags.append("-g")
+            self.optimization = "-O0"
         else:
             common_flags.append("-O2")
+            self.optimization = "-O2"
 
         main_cc = join(tool_path, "arm-none-eabi-gcc")
         main_cppc = join(tool_path, "arm-none-eabi-g++")
@@ -86,10 +93,20 @@ class GCC(mbedToolchain):
             self.cppc= [join(GOANNA_PATH, "goannac++"), "--with-cxx=" + main_cppc.replace('\\', '/'), "-std=gnu++98", "-fno-rtti", "--dialect=gnu", '--output-format="%s"' % self.GOANNA_FORMAT] + common_flags
 
         self.ld = [join(tool_path, "arm-none-eabi-gcc"), "-Wl,--gc-sections", "-Wl,--wrap,main"] + self.cpu
+        self.linker_options = ["-Wl,--gc-sections", "-Wl,--wrap,main"]
+
         self.sys_libs = ["stdc++", "supc++", "m", "c", "gcc"]
 
         self.ar = join(tool_path, "arm-none-eabi-ar")
         self.elf2bin = join(tool_path, "arm-none-eabi-objcopy")
+
+    def yaml_options(self):
+        options = {'libraries':self.sys_libs,
+                   'optimization_level':self.optimization,
+                   'compiler_options':self.common_flags,
+                   'linker_options':self.linker_options,
+                   'instruction_mode':self.instruction_mode}
+        return options
 
     def assemble(self, source, object, includes):
         return [self.hook.get_cmdline_assembler(self.asm + ['-D%s' % s for s in self.get_symbols() + self.macros] + ["-I%s" % i for i in includes] + ["-o", object, source])]
@@ -186,9 +203,10 @@ class GCC_ARM(GCC):
         self.ld.append("--specs=nano.specs")
         if target.name in ["LPC1768", "LPC4088", "LPC4088_DM", "LPC4330", "UBLOX_C027", "LPC2368"]:
             self.ld.extend(["-u _printf_float", "-u _scanf_float"])
+            self.linker_options.extend(["-u _printf_float", "-u _scanf_float"])
         elif target.name in ["RZ_A1H", "ARCH_MAX", "DISCO_F407VG", "DISCO_F429ZI", "NUCLEO_F401RE", "NUCLEO_F411RE", "NUCLEO_F446RE"]:
             self.ld.extend(["-u_printf_float", "-u_scanf_float"])
-
+            self.linker_options.extend(["-u_printf_float", "-u_scanf_float"])
         self.sys_libs.append("nosys")
 
 
@@ -204,8 +222,11 @@ class GCC_CR(GCC):
 
         # Use latest gcc nanolib
         self.ld.append("--specs=nano.specs")
+        self.linker_options.append("--specs=nano.specs")
         if target.name in ["LPC1768", "LPC4088", "LPC4088_DM", "LPC4330", "UBLOX_C027", "LPC2368"]:
             self.ld.extend(["-u _printf_float", "-u _scanf_float"])
+            self.linker_options.extend(["-u _printf_float", "-u _scanf_float"])
+        self.linker_options += ["-nostdlib"]
         self.ld += ["-nostdlib"]
 
 
@@ -250,6 +271,11 @@ class GCC_CW_EWL(GCC_CW):
             "-Xlinker --undefined=__pformatter_", "-Xlinker --defsym=__pformatter=__pformatter_",
             "-Xlinker --undefined=__sformatter", "-Xlinker --defsym=__sformatter=__sformatter",
         ] + self.cpu
+        self.linker_options = ["-Xlinker --gc-sections",
+            "-L%s" % join(CW_EWL_PATH, "lib", GCC_CW.ARCH_LIB[target.core]),
+            "-n", "-specs=ewl_c++.specs", "-mfloat-abi=soft",
+            "-Xlinker --undefined=__pformatter_", "-Xlinker --defsym=__pformatter=__pformatter_",
+            "-Xlinker --undefined=__sformatter", "-Xlinker --defsym=__sformatter=__sformatter"]
 
 
 class GCC_CW_NEWLIB(GCC_CW):

@@ -77,6 +77,12 @@ class ARM(mbedToolchain):
         self.ar = join(ARM_BIN, "armar")
         self.elf2bin = join(ARM_BIN, "fromelf")
 
+    def yaml_options(self):
+        options = {'C':{'MiscControls':['--gnu','--c99']},
+                   'ASM':{'MiscControls':["--cpreproc"]}
+        }
+        return options
+
     def remove_option(self, option):
         for tool in [self.asm, self.cc, self.cppc]:
             if option in tool:

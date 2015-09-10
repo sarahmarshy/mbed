@@ -286,7 +286,6 @@ class mbedToolchain:
             # Form factor variables
             if hasattr(self.target, 'supported_form_factors'):
                 self.symbols.extend(["TARGET_FF_%s" % t for t in self.target.supported_form_factors])
-
         return list(set(self.symbols))  # Return only unique symbols
 
     def get_labels(self):
@@ -324,7 +323,6 @@ class mbedToolchain:
         labels = self.get_labels()
         resources = Resources(path)
         self.has_config = False
-
         """ os.walk(top[, topdown=True[, onerror=None[, followlinks=False]]])
         When topdown is True, the caller can modify the dirnames list in-place
         (perhaps using del or slice assignment), and walk() will only recurse into
@@ -350,7 +348,6 @@ class mbedToolchain:
 
             # Add root to include paths
             resources.inc_dirs.append(root)
-
             for file in files:
                 file_path = join(root, file)
                 _, ext = splitext(file)

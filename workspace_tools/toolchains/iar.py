@@ -84,6 +84,8 @@ class IAR(mbedToolchain):
                     match.group('line'),
                     match.group('message')
                 )
+    def yaml_options(self):
+        return None
 
     def get_dep_opt(self, dep_path):
         return ["--dependencies", dep_path]

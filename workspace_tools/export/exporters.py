@@ -1,16 +1,14 @@
 """Just a template for subclassing"""
-import uuid, shutil, os, logging, fnmatch
-from os import walk, remove
-from os.path import join, dirname, isdir, split
-from copy import copy
-from jinja2 import Template, FileSystemLoader
-from jinja2.environment import Environment
+import uuid, shutil, os, logging
+from os.path import join, dirname, isdir
 from contextlib import closing
 from zipfile import ZipFile, ZIP_DEFLATED
-
-from workspace_tools.utils import mkdir
 from workspace_tools.toolchains import TOOLCHAIN_CLASSES
 from workspace_tools.targets import TARGET_MAP
+from copy import copy
+from os import walk, remove
+
+from workspace_tools.utils import mkdir
 
 class OldLibrariesException(Exception): pass
 
@@ -18,14 +16,10 @@ class Exporter():
     TEMPLATE_DIR = dirname(__file__)
     DOT_IN_RELATIVE_PATH = False
 
-    def __init__(self, target, inputDir, program_name, build_url_resolver, extra_symbols=None):
-        self.inputDir = inputDir
+    def __init__(self, target, build_url_resolver, extra_symbols):
         self.target = target
-        self.program_name = program_name
         self.toolchain = TOOLCHAIN_CLASSES[self.get_toolchain()](TARGET_MAP[target])
         self.build_url_resolver = build_url_resolver
-        jinja_loader = FileSystemLoader(os.path.dirname(os.path.abspath(__file__)))
-        self.jinja_environment = Environment(loader=jinja_loader)
         self.extra_symbols = extra_symbols
 
     def get_toolchain(self):
@@ -88,15 +82,6 @@ class Exporter():
         # This prevents exporting the mbed libraries from source
         # if not self.toolchain.mbed_libs:
         #    raise OldLibrariesException()
-
-    def gen_file(self, template_file, data, target_file):
-        template_path = join(Exporter.TEMPLATE_DIR, template_file)
-        template = self.jinja_environment.get_template(template_file)
-        target_text = template.render(data)
-
-        target_path = join(self.inputDir, target_file)
-        logging.debug("Generating: %s" % target_path)
-        open(target_path, "w").write(target_text)
 
     def get_symbols(self, add_extra_symbols=True):
         """ This function returns symbols which must be exported.
