@@ -56,6 +56,7 @@ def setup_project(mcu, ide, program = None, source_dir= None, macros = None, bui
 
 def perform_export(dir, name, ide, mcu, temp, clean = True, zip = True, lib_symbols = '',
                    sources_relative = False, progen_build = False):
+
     tmp_path, report = export(dir, name, ide, mcu, dir[0], temp, clean=clean,
                               make_zip=zip, extra_symbols=lib_symbols, sources_relative=sources_relative,
                               progen_build = progen_build)
