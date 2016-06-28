@@ -7,7 +7,7 @@ class BuildTest():
     def __init__(self):
 
         #environ["IARBUILD"] = ""
-        desired_ides = ['iar', 'uvision5']
+        desired_ides = ['iar']
         self.target_ides = {}
         for target in sorted(TARGET_NAMES):
             self.target_ides[target] =[]
@@ -31,6 +31,7 @@ class BuildTest():
                                                       progen_build = True)
                     if report['success']:
                         self.successes.append("%s::%s\t%s" % (mcu, ide, project_name))
+                        return
                     else:
                         self.failures.append("%s::%s\t%s" % (mcu, ide, report['errormsg']))
 
