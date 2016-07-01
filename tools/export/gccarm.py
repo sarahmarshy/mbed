@@ -14,115 +14,21 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-from exporters import Exporter
 from os.path import splitext, basename
 from os import curdir
+
+from exporters import Exporter
+from tools.targets import TARGET_MAP
 
 
 class GccArm(Exporter):
     NAME = 'GccArm'
     TOOLCHAIN = 'GCC_ARM'
 
-    TARGETS = [
-        'LPC1768',
-        'LPC1549',
-        'KL05Z',
-        'KL25Z',
-        'KL43Z',
-        'KL46Z',
-        'K64F',
-        'K22F',
-        'K20D50M',
-        'LPC4088',
-        'LPC4088_DM',
-        'LPC4330_M4',
-        'LPC11U24',
-        'LPC1114',
-        'LPC11U35_401',
-        'LPC11U35_501',
-        'LPC11U37H_401',
-        'LPC810',
-        'LPC812',
-        'LPC824',
-        'SSCI824',
-        'STM32F407',
-        'DISCO_F100RB',
-        'DISCO_F051R8',
-        'DISCO_F407VG',
-        'DISCO_F429ZI',
-        'DISCO_F469NI',
-        'DISCO_F303VC',
-        'DISCO_F746NG',
-        'DISCO_L476VG',
-        'UBLOX_C027',
-        'ARCH_PRO',
-        'NRF51822',
-        'HRM1017',
-        'RBLAB_NRF51822',
-        'RBLAB_BLENANO',
-        'LPC2368',
-        'LPC2460',
-        'LPCCAPPUCCINO',
-        'ARCH_BLE',
-        'MTS_GAMBIT',
-        'ARCH_MAX',
-        'NUCLEO_F401RE',
-        'NUCLEO_F410RB',
-        'NUCLEO_F411RE',
-        'NUCLEO_F446RE',
-        'B96B_F446VE',
-        'ARCH_MAX',
-        'NUCLEO_F030R8',
-        'NUCLEO_F031K6',
-        'NUCLEO_F042K6',
-        'NUCLEO_F070RB',
-        'NUCLEO_F072RB',
-        'NUCLEO_F091RC',
-        'NUCLEO_F103RB',
-        'NUCLEO_F302R8',
-        'NUCLEO_F303K8',
-        'NUCLEO_F303RE',
-        'NUCLEO_F334R8',
-        'NUCLEO_F746ZG',
-        'NUCLEO_F767ZI',
-        'DISCO_L053C8',
-        'NUCLEO_L011K4',
-        'NUCLEO_L031K6',
-        'NUCLEO_L053R8',
-        'NUCLEO_L073RZ',
-        'NUCLEO_L432KC',
-        'NUCLEO_L476RG',
-        'DISCO_F334C8',
-        'MAX32600MBED',
-        'MAXWSNENV',
-        'MTS_MDOT_F405RG',
-        'MTS_MDOT_F411RE',
-        'NUCLEO_L152RE',
-        'NRF51_DK',
-        'NRF51_DONGLE',
-        'NRF51_MICROBIT',
-        'SEEED_TINY_BLE',
-        'DISCO_F401VC',
-        'DELTA_DFCM_NNN40',
-        'RZ_A1H',
-        'MOTE_L152RC',
-        'EFM32WG_STK3800',
-        'EFM32LG_STK3600',
-        'EFM32GG_STK3700',
-        'EFM32ZG_STK3200',
-        'EFM32HG_STK3400',
-        'EFM32PG_STK3401',
-        'NZ32_SC151',
-        'SAMR21G18A',
-        'TEENSY3_1',
-        'SAMD21J18A',
-        'SAMD21G18A',
-        'SAML21J18A',
-        'SAMG55J19',
-        'ARM_BEETLE_SOC',
-        'ELMO_F411RE',
-        'BLUEPILL_F103C8',
-    ]
+    TARGETS = []
+    for target in TARGET_MAP.keys():
+        if TOOLCHAIN in TARGET_MAP[target].supported_toolchains:
+            TARGETS.append(target)
 
     DOT_IN_RELATIVE_PATH = True
 
