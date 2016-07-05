@@ -8,6 +8,7 @@ from jinja2.environment import Environment
 from contextlib import closing
 from zipfile import ZipFile, ZIP_DEFLATED
 from operator import add
+import yaml
 
 from tools.utils import mkdir
 from tools.toolchains import TOOLCHAIN_CLASSES
@@ -18,6 +19,7 @@ from project_generator.project import Project
 from project_generator.settings import ProjectSettings
 
 from tools.config import Config
+
 
 class OldLibrariesException(Exception): pass
 
@@ -109,19 +111,33 @@ class Exporter(object):
         }
         return project_data
 
+    def progen_make_yaml(self, project_data, name):
+        fname = os.path.join(project_data['common']['export_dir'][0], "projects.yaml")
+        project_data['common']['export_dir'] = project_data['common']['export_dir'][0]
+        new_data = {"projects":{name:project_data}}
+        if os.path.isfile(fname):
+            os.remove(fname)
+        with open(fname, 'w+') as f:
+            f.write(yaml.dump(new_data, default_flow_style=False))
+
+        return fname
+
     def progen_gen_file(self, tool_name, project_data, progen_build=False):
         """" Generate project using ProGen Project API """
-        settings = ProjectSettings()
-        project = Project(self.program_name, [project_data], settings)
-        # TODO: Fix this, the inc_dirs are not valid (our scripts copy files), therefore progen
-        # thinks it is not dict but a file, and adds them to workspace.
-        project.project['common']['include_paths'] = self.resources.inc_dirs
-        project.generate(tool_name, copied=not self.sources_relative)
-        if progen_build:
-            print("Project exported, building...")
-            result = project.build(tool_name)
-            if result == -1:
-                raise FailedBuildException("Build Failed")
+        #project_data['common']['include_paths'] = self.resources.inc_dirs
+        yaml_file = self.progen_make_yaml(project_data, self.program_name)
+        generator = Generator(yaml_file)
+
+        for project in generator.generate(''):
+            #print diff(p, project.project)
+            project.project['common']['include_paths'] = self.resources.inc_dirs
+            if project.generate(tool_name, copied=not self.sources_relative) == -1:
+                return -1
+            if progen_build:
+                print "Project exported, now building..."
+                if project.build(tool_name) == -1:
+                    raise FailedBuildException("Build Failed")
+        return 0
 
     def __scan_all(self, path):
         resources = []

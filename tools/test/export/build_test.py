@@ -21,6 +21,7 @@ import sys
 import argparse
 import os
 import shutil
+import yaml
 from os.path import join, abspath, dirname, exists, basename
 r=dirname(__file__)
 ROOT = abspath(join(r, "..","..",".."))
@@ -87,9 +88,17 @@ class ProgenBuildTest():
             return
 
         #check if project files exist
-        if not clean and os.path.exists(project_files_dir):
+        if os.path.exists(project_files_dir):
             shutil.rmtree(project_files_dir, ignore_errors=True)
         os.rename(project_dir, project_files_dir)
+
+        #change yaml file to reference new project file location
+        yaml_file = os.path.join(project_files_dir, 'projects.yaml')
+        with open(yaml_file, 'r+') as f:
+            proj_dict = yaml.load(f)
+            proj_dict["projects"][test]["common"]["export_dir"] = project_files_dir
+            with open(yaml_file, 'w+') as outf:
+                outf.write(yaml.dump(proj_dict, default_flow_style=False))
 
     def generate_and_build(self, tests, clean=False):
 
