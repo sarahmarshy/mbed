@@ -91,7 +91,7 @@
         "extra_labels": ["NXP", "LPC11UXX"],
         "supported_toolchains": ["ARM", "uARM", "GCC_ARM", "IAR"],
         "device_has": ["ANALOGIN", "ERROR_PATTERN", "I2C", "I2CSLAVE", "INTERRUPTIN", "LOCALFILESYSTEM", "PORTIN", "PORTINOUT", "PORTOUT", "PWMOUT", "SEMIHOST", "SERIAL", "SLEEP", "SPI", "SPISLAVE", "STDIO_MESSAGES"],
-        "mcu_name": "LPC11U24FBD64/401"
+        "mcu_name": "LPC11U24FHI33/301"
     },
     "LPC11U34_421": {
         "inherits": ["LPCTarget"],
@@ -176,7 +176,8 @@
     "LPCCAPPUCCINO": {
         "inherits": ["LPC11U37_501"],
         "progen": {"target": "lpc11u37_501"},
-        "device_has": ["ANALOGIN", "ERROR_PATTERN", "I2C", "I2CSLAVE", "INTERRUPTIN", "PORTIN", "PORTINOUT", "PORTOUT", "PWMOUT", "SERIAL", "SLEEP", "SPI", "SPISLAVE"]
+        "device_has": ["ANALOGIN", "ERROR_PATTERN", "I2C", "I2CSLAVE", "INTERRUPTIN", "PORTIN", "PORTINOUT", "PORTOUT", "PWMOUT", "SERIAL", "SLEEP", "SPI", "SPISLAVE"],
+        "mcu_name": "LPC11U37FBD64/501"
     },
     "ARCH_GPRS": {
         "supported_form_factors": ["ARDUINO"],
@@ -1720,7 +1721,8 @@
         "supported_toolchains": ["GCC_ARM", "ARM", "uARM"],
         "progen": {"target": "samr21j18a"},
         "progen_target": "samr21j18a",
-        "device_has": ["ANALOGIN", "ANALOGOUT", "I2C", "I2CSLAVE", "I2C_ASYNCH", "INTERRUPTIN", "PORTIN", "PORTINOUT", "PORTOUT", "PWMOUT", "RTC", "SERIAL", "SERIAL_ASYNCH", "SERIAL_FC", "SLEEP", "SPI", "SPISLAVE", "SPI_ASYNCH"]
+        "device_has": ["ANALOGIN", "ANALOGOUT", "I2C", "I2CSLAVE", "I2C_ASYNCH", "INTERRUPTIN", "PORTIN", "PORTINOUT", "PORTOUT", "PWMOUT", "RTC", "SERIAL", "SERIAL_ASYNCH", "SERIAL_FC", "SLEEP", "SPI", "SPISLAVE", "SPI_ASYNCH"],
+        "mcu_name": "ATSAML21J18A"
     },
     "SAMG55J19": {
         "inherits": ["Target"],
