@@ -252,7 +252,7 @@ def prepare_toolchain(src_paths, target, toolchain_name,
 
     return toolchain
 
-def scan_resources(src_paths, toolchain, dependencies_paths=None, inc_dirs=None):
+def scan_resources(src_paths, toolchain, dependencies_paths=None, inc_dirs=None, base_path=None):
     """ Scan resources using initialized toolcain
     src_paths: the paths to source directories
     toolchain: valid toolchain object
@@ -261,9 +261,9 @@ def scan_resources(src_paths, toolchain, dependencies_paths=None, inc_dirs=None)
     """
 
     # Scan src_path
-    resources = toolchain.scan_resources(src_paths[0])
+    resources = toolchain.scan_resources(src_paths[0], base_path=base_path)
     for path in src_paths[1:]:
-        resources.add(toolchain.scan_resources(path))
+        resources.add(toolchain.scan_resources(path, base_path=base_path))
 
     # Scan dependency paths for include dirs
     if dependencies_paths is not None:
@@ -495,7 +495,7 @@ def build_lib(lib_id, target, toolchain_name, options=None, verbose=False, clean
     """
     lib = Library(lib_id)
     if not lib.is_supported(target, toolchain_name):
-        print 'Library "%s" is not yet supported on target %s with toolchain %s' % (lib_id, target.name, toolchain)
+        print 'Library "%s" is not yet supported on target %s with toolchain %s' % (lib_id, target.name, toolchain_name)
         return False
 
     # We need to combine macros from parameter list with macros from library definition
