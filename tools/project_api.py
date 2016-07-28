@@ -128,8 +128,7 @@ def generate_project_files(resources, export_path, target, name, toolchain, ide,
     exporter = exporter_cls(target, export_path, name, toolchain,
                             extra_symbols=macros, resources=resources)
     exporter.generate()
-    files = exporter.generated_files
-    return files, exporter
+    return exporter
 
 
 def zip_export(file_name, prefix, resources, project_files):
@@ -143,8 +142,8 @@ def zip_export(file_name, prefix, resources, project_files):
       directory
     """
     with zipfile.ZipFile(file_name, "w") as zip_file:
-        for prj_file in project_files:
-            zip_file.write(prj_file, join(prefix, basename(prj_file)))
+        for prj_file, content in project_files.items():
+            zip_file.writestr(join(prefix,basename(prj_file)), content)
         for source in resources.headers + resources.s_sources + \
             resources.c_sources + resources.cpp_sources + \
             resources.libraries + resources.hex_files + \
@@ -229,11 +228,15 @@ def export_project(src_paths, export_path, target, ide,
     if linker_script is not None:
         resources.linker_script = linker_script
 
-    files, exporter = generate_project_files(resources, export_path,
+    exporter = generate_project_files(resources, export_path,
                                              target, name, toolchain, ide,
                                              macros=macros)
     if zip_proj:
-        zip_export(join(export_path, zip_proj), name, temp, files)
+        zip_export(join(dirname(export_path), zip_proj), name, temp, exporter.raw_content)
+    else:
+        for filename, content in exporter.raw_content.items():
+            with open(join(export_path, basename(filename)), 'w+') as f:
+                f.write(content)
 
     return exporter
 
