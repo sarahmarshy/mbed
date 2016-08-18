@@ -229,6 +229,8 @@ def export_project(src_paths, export_path, target, ide,
 
     if zip_proj:
         subtract_basepath(resources, export_path)
+    else:
+        resources.relative_to(export_path)
 
     # Change linker script if specified
     if linker_script is not None:
