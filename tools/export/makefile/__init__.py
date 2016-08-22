@@ -22,7 +22,6 @@ from tools.export.exporters import Exporter
 from tools.utils import NotSupportedException
 from tools.targets import TARGET_MAP
 
-
 class Makefile(Exporter):
     """Generic Makefile template that mimics the behavior of the python build
     system
