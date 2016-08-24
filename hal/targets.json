@@ -559,7 +559,7 @@
         "supported_form_factors": ["ARDUINO"],
         "core": "Cortex-M4F",
         "supported_toolchains": ["ARM", "GCC_ARM", "IAR"],
-        "extra_labels": ["Freescale", "KSDK2_MCUS", "FRDM", "KPSDK_MCUS", "KPSDK_CODE", "MCU_K64F"],
+        "extra_labels": ["MK64FN1M0xxx12","Freescale", "KSDK2_MCUS", "FRDM", "KPSDK_MCUS", "KPSDK_CODE", "MCU_K64F"],
         "is_disk_virtual": true,
         "macros": ["CPU_MK64FN1M0VMD12", "FSL_RTOS_MBED", "MBEDTLS_ENTROPY_HARDWARE_ALT"],
         "inherits": ["Target"],
