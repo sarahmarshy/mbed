@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<package xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="PACK.xsd">
+  <vendor>Keil</vendor>
+  <name>{{name}}</name>
+  <description>Exported mbed project.</description>
+  <url>{{device.url}}</url>
+
+  <releases>
+    <release version="5.20.0.2">Generated {{date}}</release>
+  </releases>
+  <create>
+    <project name="{{name}}" documentation="">
+      <target Dendian="{{device.dendian}}" Dfpu="{{device.dfpu}}" Dname="{{device.dname}}" Dvendor="{{device.dvendor}}">
+        <output debug="1" name="{{name}}" type="exe"/>
+        <debugProbe name="{{debug_interface}}" protocol="{{debug_protocol}}"/>
+        <algorithm name="{{device.algorithm['name']}}" start="{{device.algorithm['start']}}"
+        size="{{device.algorithm['size']}}" RAMstart="{{device.algorithm['RAMstart']}}" RAMsize="{{device.algorithm['RAMsize']}}"/>
+      </target>
+      {{project_files}}
+    </project>
+  </create>
+</package>
