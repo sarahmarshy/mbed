@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<package xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="PACK.xsd">
+  <vendor>Keil</vendor>
+  <name>{{name}}</name>
+  <description>Exported mbed project.</description>
+  <url>{{pdsc_url}}</url>
+
+  <releases>
+    <release version="5.20.0.2">Generated {{date}}</release>
+  </releases>
+  <create>
+    <project name="{{name}}" documentation="">
+      <target Dendian="{{dendian}}" Dfpu="{{dfpu}}" Dname="{{target}}" Dvendor="{{dvendor}}">
+        <output debug="1" name="{{name}}" type="exe"/>
+        <debugProbe name="{{debug_interface}}" protocol="{{debug_protocol}}"/>
+      </target>
+      <files>
+        {% for group in project_files %}
+        <group name="{{group}}">
+          {% for file in project_files[group] %}
+          <file category="{{file.type}}" name="{{file.loc}}"/>
+          {% endfor %}
+        </group>
+        {% endfor %}
+      </files>
+    </project>
+  </create>
+</package>

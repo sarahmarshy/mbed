@@ -21,7 +21,7 @@ import yaml
 
 from tools.export import uvision4, uvision5, codered, makefile, ds5_5, iar
 from tools.export import emblocks, coide, kds, simplicityv3, atmelstudio
-from tools.export import sw4stm32, e2studio, zip, cdt
+from tools.export import sw4stm32, e2studio, zip, cmsis, cdt
 from tools.export.exporters import OldLibrariesException, FailedBuildException
 from tools.targets import TARGET_NAMES, EXPORT_MAP, TARGET_MAP
 
@@ -48,7 +48,8 @@ EXPORTERS = {
     'eclipse_gcc_arm'  : cdt.EclipseGcc,
     'eclipse_iar'      : cdt.EclipseIAR,
     'eclipse_armc5'    : cdt.EclipseArmc5,
-    'zip' : zip.ZIP
+    'zip' : zip.ZIP,
+    'cmsis'    : cmsis.CMSIS
 }
 
 ERROR_MESSAGE_UNSUPPORTED_TOOLCHAIN = """
