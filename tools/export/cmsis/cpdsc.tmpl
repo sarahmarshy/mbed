@@ -14,15 +14,7 @@
         <output debug="1" name="{{name}}" type="exe"/>
         <debugProbe name="{{debug_interface}}" protocol="{{debug_protocol}}"/>
       </target>
-      <files>
-        {% for group in project_files %}
-        <group name="{{group}}">
-          {% for file in project_files[group] %}
-          <file category="{{file.type}}" name="{{file.loc}}"/>
-          {% endfor %}
-        </group>
-        {% endfor %}
-      </files>
+      {{project_files}}
     </project>
   </create>
 </package>
