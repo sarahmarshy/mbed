@@ -2,6 +2,7 @@ import os
 from os.path import sep
 from itertools import groupby
 from xml.etree.ElementTree import Element, tostring
+from xml.dom.minidom import parseString
 
 from ArmPackManager import Cache
 
@@ -23,6 +24,40 @@ class fileCMSIS():
         self.loc = loc
         self.name = name
 
+class deviceCMSIS():
+    def __init__(self, target, cache):
+        t = TARGET_MAP[target]
+        cpu_name = self.cpu_cmsis(t.core)
+        cpu_info = cache.index[cpu_name]
+        self.url = cpu_info['pdsc_file']
+        for label in t.extra_labels:
+            try:
+                target_info = cache.index[label]
+                break
+            except:
+                pass
+        else:
+            raise Exception("Not found")
+        self.dname = cpu_name
+        self.dfpu = cpu_info['processor']['fpu']
+        self.dvendor = cpu_info['vendor']
+        self.dendian = cpu_info['processor']['endianness']
+        algo = target_info['algorithm']
+        self.algorithm = {
+            'name': algo['name'], 
+            'start': algo['start'],
+            'size': algo['size'],
+            'RAMstart': algo['RAMstart'],
+            'RAMsize' : algo['RAMsize']
+        }
+
+
+    def cpu_cmsis(self, cpu):
+        cpu = cpu.replace("Cortex-","ARMC")
+        cpu = cpu.replace("+","P")
+        cpu = cpu.replace("F","_FP")
+        return cpu
+
 class CMSIS(Exporter):
     NAME = 'cmsis'
     TOOLCHAIN = 'ARM'
@@ -32,7 +67,7 @@ class CMSIS(Exporter):
     def group_project_files(self, sources, root_element):
         """Recursively roup the source files by their encompassing directory"""
         def make_key(src):
-            """turn a source file into it's group name"""
+            """turn a source file into its group name"""
             key = src.name.split(sep)[0]
             if key == ".":
                 key = os.path.basename(os.path.realpath(self.export_dir))
@@ -62,16 +97,6 @@ class CMSIS(Exporter):
         cache = Cache(True, False)
         if cache_d:
             cache.cache_descriptors()
-        t = TARGET_MAP[self.target]
-        for label in t.extra_labels:
-            try:
-                target_info = cache.index[label]
-                targ = label
-                break
-            except:
-                pass
-        else:
-            raise Exception("Not found")
 
         srcs = self.resources.headers + self.resources.s_sources + \
                self.resources.c_sources + self.resources.cpp_sources + \
@@ -81,15 +106,13 @@ class CMSIS(Exporter):
         ctx = {
             'name': self.project_name,
             'project_files': tostring(self.group_project_files(srcs, Element('files'))),
-            'pdsc_url': target_info['pdsc_file'],
-            'pdsc_package': '',
-            'dendian': target_info['processor']['endianness'],
-            'dfpu': target_info['processor']['fpu'],
-            'dvendor': target_info['vendor'],
+            'device': deviceCMSIS(self.target, cache),
             'debug_interface': 'CMSIS-DAP',
             'debug_protocol': 'jtag',
-            'date': '',
-            'target': targ
+            'date': ''
         }
+        dom = parseString(ctx['project_files'])
+        ctx['project_files'] = dom.toprettyxml(indent="\t")
+
 
         self.gen_file('cmsis/cpdsc.tmpl', ctx, 'project.cpdsc')
