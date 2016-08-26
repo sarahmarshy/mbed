@@ -64,8 +64,6 @@ class IAREmbeddedWorkbench(Exporter):
         project_data['misc'] = self.flags
         # VLA is enabled via template IccAllowVLA
         project_data['misc']['c_flags'].remove("--vla")
-        project_data['misc']['asm_flags'].extend(
-            ['-D%s' % define for define in self.toolchain.get_symbols()])
         project_data['build_dir'] = os.path.join(project_data['build_dir'], 'iar_arm')
         self.progen_gen_file(project_data)
 
