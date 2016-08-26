@@ -6,6 +6,7 @@ from os.path import join, dirname, relpath
 from itertools import groupby
 from jinja2 import FileSystemLoader
 from jinja2.environment import Environment
+import copy
 
 from tools.targets import TARGET_MAP
 from project_generator.tools import tool
@@ -89,7 +90,7 @@ class Exporter(object):
         common_flags - common options
         """
         config_header = self.toolchain.get_config_header()
-        flags = {key + "_flags": value for key, value
+        flags = {key + "_flags": copy.deepcopy(value) for key, value
                  in self.toolchain.flags.iteritems()}
         asm_defines = ["-D" + symbol for symbol in self.toolchain.get_symbols(True)]
         c_defines = ["-D" + symbol for symbol in self.toolchain.get_symbols()]
