@@ -3,6 +3,7 @@ from os.path import sep
 from itertools import groupby
 from xml.etree.ElementTree import Element, tostring
 from xml.dom.minidom import parseString
+import ntpath
 
 from ArmPackManager import Cache
 
@@ -25,19 +26,22 @@ class fileCMSIS():
         self.name = name
 
 class deviceCMSIS():
-    def __init__(self, target, cache):
+    def __init__(self, target, use_generic_cpu=False):
+        cache = Cache(True, False)
+        if cache_d:
+            cache.cache_descriptors()
+
         t = TARGET_MAP[target]
-        cpu_name = self.cpu_cmsis(t.core)
-        cpu_info = cache.index[cpu_name]
-        self.url = cpu_info['pdsc_file']
-        for label in t.extra_labels:
-            try:
-                target_info = cache.index[label]
-                break
-            except:
-                pass
+        cpu_name = t.cmsis_device
+        target_info = cache.index[cpu_name]
+        if use_generic_cpu:
+            cpu_name = self.cpu_cmsis(t.core)
+            cpu_info = cache.index[cpu_name]
         else:
-            raise Exception("Not found")
+            cpu_info = target_info
+
+        self.url = cpu_info['pdsc_file']
+        self.pack_url, self.pack_id = ntpath.split(self.url)
         self.dname = cpu_name
         self.dfpu = cpu_info['processor']['fpu']
         self.dvendor = cpu_info['vendor']
@@ -50,7 +54,22 @@ class deviceCMSIS():
             'RAMstart': algo['RAMstart'],
             'RAMsize' : algo['RAMsize']
         }
+        target_info['debug'] = target_info.get('debug', '')
+        self.svd = deviceCMSIS.format_debug(cpu_name, target_info['debug'])
+        self.reg_file = deviceCMSIS.format_reg_file(cpu_name,
+                                                    target_info['compile']['header'])
 
+
+    @staticmethod
+    def format_debug(device_name=None, debug_file=None):
+        if debug_file == '': return ''
+        sfd = "$$Device:{0}${1}"
+        return sfd.format(device_name, debug_file)
+
+    @staticmethod
+    def format_reg_file(device_name, include_file):
+        reg_file = "$$Device:{0}${1}"
+        return reg_file.format(device_name, include_file)
 
     def cpu_cmsis(self, cpu):
         cpu = cpu.replace("Cortex-","ARMC")
@@ -94,9 +113,6 @@ class CMSIS(Exporter):
         return root_element
 
     def generate(self):
-        cache = Cache(True, False)
-        if cache_d:
-            cache.cache_descriptors()
 
         srcs = self.resources.headers + self.resources.s_sources + \
                self.resources.c_sources + self.resources.cpp_sources + \
@@ -106,7 +122,7 @@ class CMSIS(Exporter):
         ctx = {
             'name': self.project_name,
             'project_files': tostring(self.group_project_files(srcs, Element('files'))),
-            'device': deviceCMSIS(self.target, cache),
+            'device': deviceCMSIS(self.target),
             'debug_interface': 'CMSIS-DAP',
             'debug_protocol': 'jtag',
             'date': ''

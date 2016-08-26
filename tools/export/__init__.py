@@ -19,18 +19,16 @@ from os.path import join, exists, basename
 from shutil import copytree, rmtree, copy
 import yaml
 
-from tools.export import uvision4, uvision5, codered, makefile, ds5_5, iar
+from tools.export import codered, makefile, ds5_5, iar
 from tools.export import emblocks, coide, kds, simplicityv3, atmelstudio
-from tools.export import sw4stm32, e2studio, zip, cmsis, cdt
+from tools.export import sw4stm32, e2studio, zip, cmsis, cdt, uvision
 from tools.export.exporters import OldLibrariesException, FailedBuildException
 from tools.targets import TARGET_NAMES, EXPORT_MAP, TARGET_MAP
 
 from project_generator_definitions.definitions import ProGenDef
 
 EXPORTERS = {
-    'uvision': uvision4.Uvision4,
-    'uvision4': uvision4.Uvision4,
-    'uvision5': uvision5.Uvision5,
+    'uvision5': uvision.Uvision,
     'lpcxpresso': codered.CodeRed,
     'gcc_arm': makefile.GccArm,
     'make_gcc_arm': makefile.GccArm,
