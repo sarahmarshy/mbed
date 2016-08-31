@@ -24,15 +24,21 @@ class fileCMSIS():
         self.loc = loc
         self.name = name
 
-class deviceCMSIS():
+
+class DeviceCMSIS():
+    """CMSIS Device class
+
+    Encapsulates target information retrieved by arm-pack-manager"""
     def __init__(self, target, use_generic_cpu=False):
         cache = Cache(True, False)
         if cache_d:
             cache.cache_descriptors()
 
         t = TARGET_MAP[target]
-        cpu_name = t.cmsis_device
+        cpu_name = t.device_name
+        self.core = t.core
         target_info = cache.index[cpu_name]
+
         if use_generic_cpu:
             cpu_name = self.cpu_cmsis(t.core)
             cpu_info = cache.index[cpu_name]
@@ -45,30 +51,9 @@ class deviceCMSIS():
         self.dfpu = cpu_info['processor']['fpu']
         self.dvendor = cpu_info['vendor']
         self.dendian = cpu_info['processor']['endianness']
-        algo = target_info['algorithm']
-        self.algorithm = {
-            'name': algo['name'], 
-            'start': algo['start'],
-            'size': algo['size'],
-            'RAMstart': algo['RAMstart'],
-            'RAMsize' : algo['RAMsize']
-        }
-        target_info['debug'] = target_info.get('debug', '')
-        self.svd = deviceCMSIS.format_debug(cpu_name, target_info['debug'])
-        self.reg_file = deviceCMSIS.format_reg_file(cpu_name,
-                                                    target_info['compile']['header'])
-
-
-    @staticmethod
-    def format_debug(device_name=None, debug_file=None):
-        if debug_file == '': return ''
-        sfd = "$$Device:{0}${1}"
-        return sfd.format(device_name, debug_file)
-
-    @staticmethod
-    def format_reg_file(device_name, include_file):
-        reg_file = "$$Device:{0}${1}"
-        return reg_file.format(device_name, include_file)
+        self.debug_interface = target_info['debug-interface']
+        self.debug_svd = target_info.get('debug', '')
+        self.compile_header = target_info['compile']['header']
 
     def cpu_cmsis(self, cpu):
         cpu = cpu.replace("Cortex-","ARMC")
@@ -122,7 +107,7 @@ class CMSIS(Exporter):
         ctx = {
             'name': self.project_name,
             'project_files': tostring(self.group_project_files(srcs, Element('files'))),
-            'device': deviceCMSIS(self.target),
+            'device': DeviceCMSIS(self.target),
             'debug_interface': 'CMSIS-DAP',
             'debug_protocol': 'jtag',
             'date': ''
