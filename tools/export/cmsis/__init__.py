@@ -8,7 +8,7 @@ import ntpath
 from ArmPackManager import Cache
 
 from tools.targets import TARGET_MAP
-from tools.export.exporters import Exporter
+from tools.export.exporters import Exporter, TargetNotSupportedException
 
 cache_d = False
 
@@ -35,9 +35,12 @@ class DeviceCMSIS():
             cache.cache_descriptors()
 
         t = TARGET_MAP[target]
-        cpu_name = t.device_name
+        try:
+            cpu_name = t.device_name
+            target_info = cache.index[cpu_name]
+        except:
+            raise TargetNotSupportedException
         self.core = t.core
-        target_info = cache.index[cpu_name]
 
         if use_generic_cpu:
             cpu_name = self.cpu_cmsis(t.core)
