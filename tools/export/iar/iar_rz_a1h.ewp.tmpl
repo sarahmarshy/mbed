@@ -3,7 +3,7 @@
 <project>
   <fileVersion>2</fileVersion>
   <configuration>
-    <name>Debug</name>
+    <name>{{name}}</name>
     <toolchain>
       <name>ARM</name>
     </toolchain>
@@ -16,16 +16,16 @@
         <wantNonLocal>1</wantNonLocal>
         <debug>1</debug>
         <option>
+          <state>$PROJ_DIR$\.build\iar_arm\Exe</state>
           <name>ExePath</name>
-          <state>Debug\Exe</state>
         </option>
         <option>
+          <state>$PROJ_DIR$\.build\iar_arm\Obj</state>
           <name>ObjPath</name>
-          <state>Debug\Obj</state>
         </option>
         <option>
+          <state>$PROJ_DIR$\.build\iar_arm\List</state>
           <name>ListPath</name>
-          <state>Debug\List</state>
         </option>
         <option>
           <name>Variant</name>
@@ -242,11 +242,13 @@
         </option>
         <option>
           <name>IExtraOptionsCheck</name>
-          <state>0</state>
+          <state>1</state>
         </option>
         <option>
           <name>IExtraOptions</name>
-          <state></state>
+          {% for flag in c_flags %}
+		  <state>{{flag}}</state>
+		  {% endfor %}
         </option>
         <option>
           <name>CCLangConformance</name>
@@ -294,9 +296,9 @@
         </option>
         <option>
           <name>CCIncludePath2</name>
-        
-          <state></state>
-        
+          {% for file in include_paths %}
+          <state>{{file}}</state>
+          {% endfor %}
         </option>
         <option>
           <name>CCStdIncCheck</name>
@@ -549,7 +551,9 @@
         </option>
         <option>
           <name>AExtraOptionsV2</name>
-          <state></state>
+          {% for flag in asm_flags %}
+          <state>{{flag}}</state>
+          {% endfor %}
         </option>
       </data>
     </settings>
@@ -689,7 +693,7 @@
         </option>
         <option>
           <name>IlinkIcfFile</name>
-          <state>$PROJ_DIR$\mbed\TARGET_RZ_A1H\TOOLCHAIN_IAR\MBRZA1H.icf</state>
+          <state>{{linker_script}}</state>
         </option>
         <option>
           <name>IlinkIcfFileSlave</name>
@@ -725,7 +729,9 @@
         </option>
         <option>
           <name>IlinkExtraOptions</name>
-          <state>--skip_dynamic_initialization</state>
+          {% for flag in ld_flags %}
+          <state>{{flag}}</state>
+          {% endfor %}
         </option>
         <option>
           <name>IlinkLowLevelInterfaceSlave</name>
@@ -911,15 +917,16 @@
       <data/>
     </settings>
   </configuration>
-  <file>
-<name>$PROJ_DIR$/main.cpp</name>
-</file>
-<group>
-<name>env</name>
-<file>
-<name>$PROJ_DIR$/env\test_env.cpp</name>
-</file>
-</group>
-
+  {% for group in groups %}
+    <group>
+      <name>{{group.name}}</name>
+	    {% for file in group.files %}
+        <file>
+          <name>{{file}}</name>
+        </file>
+	    {% endfor %}
+    </group>
+	{% endfor %}
+    <fileVersion>2</fileVersion>
 </project>
 
