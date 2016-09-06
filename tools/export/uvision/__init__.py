@@ -168,26 +168,30 @@ class Uvision(Exporter):
             13: 'error writing',
             15: 'error reading xml file',
         }
-        success = 0
-        warn  = 1
+
+        SUCCESSVALUE = 0
+        WARNVALUE = 1
+
+
         if find_executable("UV4"):
             uv_exe = "UV4.exe"
         else:
             uv_exe = join('C:', sep,
             'Keil_v5', 'UV4', 'UV4.exe')
-        if not exists(uv_exe):
-            raise Exception("UV4.exe not found. Add to path.")
-        cmd = [uv_exe, '-r', '-j0', '-o', join(self.export_dir,'build_log.txt'), join(self.export_dir,self.project_name+".uvprojx")]
-        print cmd
-        sys.stdout.flush()
+            if not exists(uv_exe):
+                raise Exception("UV4.exe not found. Add to path.")
+        proj_file = join(self.export_dir,self.project_name+".uvprojx")
+        cmd = [uv_exe, '-r', '-j0', '-o', join(self.export_dir,'build_log.txt'),
+               proj_file]
+
+        ret_code = None
         ret_code = subprocess.call(cmd)
-        if ret_code != success and ret_code != warn:
+        if ret_code != SUCCESSVALUE and ret_code != WARNVALUE:
             # Seems like something went wrong.
             raise FailedBuildException("Project: %s build failed with the status: %s" % (
-                self.project_name, ERRORLEVEL.get(ret_code, "Unknown")))
-        else:
-            return "Project: %s build succeeded with the status: %s" % (
-            self.project_name, ERRORLEVEL.get(ret_code, "Unknown"))
+            proj_file, ERRORLEVEL.get(ret_code, "Unknown")))
+
+
 
 
 
