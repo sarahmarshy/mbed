@@ -9,7 +9,6 @@ from ArmPackManager import Cache
 
 from tools.targets import TARGET_MAP
 from tools.export.exporters import Exporter
-import yaml
 
 cache_d = False
 
@@ -83,17 +82,18 @@ class CMSIS(Exporter):
     TARGETS = [target for target, obj in TARGET_MAP.iteritems()
                if "ARM" in obj.supported_toolchains]
 
+    def make_key(self, src):
+        """turn a source file into its group name"""
+        key = src.name.split(sep)[0]
+        if key == ".":
+            key = os.path.basename(os.path.realpath(self.export_dir))
+        return key
+
     def group_project_files(self, sources, root_element):
         """Recursively group the source files by their encompassing directory"""
-        def make_key(src):
-            """turn a source file into its group name"""
-            key = src.name.split(sep)[0]
-            if key == ".":
-                key = os.path.basename(os.path.realpath(self.export_dir))
-            return key
 
-        data = sorted(sources, key=make_key)
-        for group, files in groupby(data, make_key):
+        data = sorted(sources, key=self.make_key)
+        for group, files in groupby(data, self.make_key):
             new_srcs = []
             for f in list(files):
                 spl = f.name.split(sep)
