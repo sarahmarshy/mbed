@@ -1,14 +1,17 @@
 import os
-from os.path import sep, normpath, basename, dirname, realpath, relpath
+from os.path import sep, normpath, basename, dirname, realpath, join, exists
 from itertools import groupby
 import ntpath
+import subprocess
 import copy
 from collections import namedtuple
+from distutils.spawn import find_executable
+import sys
 
 from ArmPackManager import Cache
 
 from tools.targets import TARGET_MAP
-from tools.export.exporters import Exporter
+from tools.export.exporters import Exporter, FailedBuildException
 from tools.export.cmsis import DeviceCMSIS
 
 cache_d = False
@@ -42,7 +45,7 @@ class DeviceUvision(DeviceCMSIS):
                      "j-link":'Segger\\JL2CM3.dll',
                      "cmsis-dap":'BIN\\CMSIS_AGDI.dll',
                      "nu-link":'NULink\\Nu_Link.dll'}
-        binary = debuggers["cmsis-dap"]
+        binary = debuggers["cmsis-dap"] # default debugger
         for supported_debug in self.debug_interface:
             for debug, bin_loc in debuggers.items():
                 if debug in supported_debug.lower():
@@ -129,6 +132,7 @@ class Uvision(Exporter):
         #  thus we remove it
         try: flags['c_flags'].remove("--no_vla")
         except ValueError: pass
+        
         flags['c_flags'] =" ".join(flags['c_flags'])
         return flags
 
@@ -152,3 +156,41 @@ class Uvision(Exporter):
         }
         ctx.update(self.format_flags())
         self.gen_file('uvision/uvision.tmpl', ctx, self.project_name+".uvprojx")
+
+    def build(self):
+        ERRORLEVEL = {
+            0: 'success (0 warnings, 0 errors)',
+            1: 'warnings',
+            2: 'errors',
+            3: 'fatal errors',
+            11: 'cant write to project file',
+            12: 'device error',
+            13: 'error writing',
+            15: 'error reading xml file',
+        }
+        success = 0
+        warn  = 1
+        if find_executable("UV4"):
+            uv_exe = "UV4.exe"
+        else:
+            uv_exe = join('C:', sep,
+            'Keil_v5', 'UV4', 'UV4.exe')
+        if not exists(uv_exe):
+            raise Exception("UV4.exe not found. Add to path.")
+        cmd = [uv_exe, '-r', '-j0', '-o', join(self.export_dir,'build_log.txt'), join(self.export_dir,self.project_name+".uvprojx")]
+        print cmd
+        sys.stdout.flush()
+        ret_code = subprocess.call(cmd)
+        if ret_code != success and ret_code != warn:
+            # Seems like something went wrong.
+            raise FailedBuildException("Project: %s build failed with the status: %s" % (
+                self.project_name, ERRORLEVEL.get(ret_code, "Unknown")))
+        else:
+            return "Project: %s build succeeded with the status: %s" % (
+            self.project_name, ERRORLEVEL.get(ret_code, "Unknown"))
+
+
+
+
+
+
