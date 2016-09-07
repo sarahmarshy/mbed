@@ -89,26 +89,6 @@ class Uvision(Exporter):
         name = ntpath.basename(normpath(loc))
         return UVFile(type, loc, name)
 
-    def make_key(self, src):
-        """From a source file, extract group name
-        Positional Arguments:
-        src - the src's location
-        """
-        key = basename(dirname(src.loc))
-        if key == ".":
-            key = basename(realpath(self.export_dir))
-        return key
-
-    def group_project_files(self, sources):
-        """Group the source files by their encompassing directory
-        Positional Arguments:
-        sources - array of sourc locations
-
-        Returns a dictionary of {group name: list of source locations}
-        """
-        data = sorted(sources, key=self.make_key)
-        return {k: list(g) for k,g in groupby(data, self.make_key)}
-
     def format_flags(self):
         """Format toolchain flags for Uvision"""
         flags = copy.deepcopy(self.flags)
@@ -136,6 +116,12 @@ class Uvision(Exporter):
         flags['c_flags'] =" ".join(flags['c_flags'])
         return flags
 
+    def format_src(self, srcs):
+        grouped = self.group_project_files(srcs)
+        for group, files in grouped.items():
+            grouped[group] = [self.uv_file(src) for src in files]
+        return grouped
+
     def generate(self):
         """Generate the .uvproj file"""
         cache = Cache(True, False)
@@ -146,10 +132,9 @@ class Uvision(Exporter):
                self.resources.c_sources + self.resources.cpp_sources + \
                self.resources.objects + self.resources.libraries
 
-        srcs = [self.uv_file(src) for src in srcs]
         ctx = {
             'name': self.project_name,
-            'project_files': self.group_project_files(srcs),
+            'project_files': self.format_src(srcs),
             'linker_script':self.resources.linker_script,
             'include_paths': '; '.join(self.resources.inc_dirs).encode('utf-8'),
             'device': DeviceUvision(self.target)
