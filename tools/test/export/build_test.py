@@ -22,9 +22,10 @@ import shutil
 ROOT = path.abspath(path.join(path.dirname(__file__), "..", "..", ".."))
 sys.path.insert(0, ROOT)
 import argparse
+import sys
 
 from tools.export import EXPORTERS
-from tools.targets import TARGET_NAMES
+from tools.targets import TARGET_NAMES, TARGET_MAP
 from tools.tests import TESTS
 from tools.project import setup_project
 from tools.project_api import print_results, export_project
@@ -47,6 +48,7 @@ class ProgenBuildTest(object):
         """
         self.ides = desired_ides
         self.mcus = mcus
+        print self.mcus
         self.tests = tests
 
     @property
@@ -54,8 +56,7 @@ class ProgenBuildTest(object):
         """Yields tuples of valid mcu, ide combinations"""
         for mcu in self.mcus:
             for ide in self.ides:
-                if mcu in EXPORTERS[ide].TARGETS:
-                    yield mcu, ide
+                yield mcu, ide
 
     @staticmethod
     def handle_log_files(project_dir, tool, name):
@@ -109,19 +110,30 @@ class ProgenBuildTest(object):
             for test in self.tests:
                 export_location, name, src, lib = setup_project(ide, mcu,
                                                                 program=test)
+
                 test_name = Test(test).id
+                print "Performing export %s::%s\t%s" % (mcu, ide, test_name)
+                sys.stdout.flush()
                 try:
                     exporter = export_project(src, export_location, mcu, ide,
                                               clean=clean, name=name,
                                               libraries_paths=lib)
-                    exporter.progen_build()
-                    successes.append("%s::%s\t%s" % (mcu, ide, test_name))
-                except FailedBuildException:
-                    failures.append("%s::%s\t%s" % (mcu, ide, test_name))
                 except TargetNotSupportedException:
                     skips.append("%s::%s\t%s" % (mcu, ide, test_name))
+                else:
+                    print "Performing build %s::%s\t%s" % (mcu, ide, test_name)
+                    sys.stdout.flush()
+                    try:
+                        b = exporter.build()
+                    except FailedBuildException, e:
+                        print e
+                        sys.stdout.flush()
+                        failures.append("%s::%s\t%s" % (mcu, ide, test_name))
+                    else:
+                        print b
+                        sys.stdout.flush()
+                        successes.append("%s::%s\t%s" % (mcu, ide, test_name))
 
-                ProgenBuildTest.handle_log_files(export_location, ide, name)
                 if clean:
                     shutil.rmtree(export_location, ignore_errors=True)
         return successes, failures, skips
@@ -157,13 +169,10 @@ def main():
                         help="The name of the desired test program",
                         default=default_tests)
 
-    parser.add_argument(
-        "-m", "--mcu",
-        metavar="MCU",
-        default='LPC1768',
-        nargs="+",
-        type=argparse_force_uppercase_type(targetnames, "MCU"),
-        help="generate project for the given MCU (%s)" % ', '.join(targetnames))
+    parser.add_argument("-m", "--mcus",
+                        nargs='+',
+                        dest="targets",
+                        default=[])
 
     parser.add_argument("-c", "--clean",
                         dest="clean",
@@ -172,7 +181,7 @@ def main():
                         default=False)
 
     options = parser.parse_args()
-    test = ProgenBuildTest(options.ides, options.mcu, options.programs)
+    test = ProgenBuildTest(options.ides, options.targets, options.programs)
     successes, failures, skips = test.generate_and_build(clean=options.clean)
     print_results(successes, failures, skips)
     sys.exit(len(failures))
