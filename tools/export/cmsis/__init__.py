@@ -84,7 +84,7 @@ class CMSIS(Exporter):
                if "ARM" in obj.supported_toolchains]
 
     def group_project_files(self, sources, root_element):
-        """Recursively roup the source files by their encompassing directory"""
+        """Recursively group the source files by their encompassing directory"""
         def make_key(src):
             """turn a source file into its group name"""
             key = src.name.split(sep)[0]

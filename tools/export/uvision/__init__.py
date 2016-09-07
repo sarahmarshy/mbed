@@ -15,16 +15,33 @@ import yaml
 cache_d = False
 
 class Uvision(Exporter):
+    """Keil Uvision class
+
+    This class encapsulates information to be contained in a Uvision
+    project file (.uvprojx).
+    The needed information can be viewed in uvision.tmpl
+    """
     NAME = 'cmsis'
     TOOLCHAIN = 'ARM'
     TARGETS = [target for target, obj in TARGET_MAP.iteritems()
                if "ARM" in obj.supported_toolchains]
-
+    #File associations within .uvprojx file
     file_types = {'.cpp': 8, '.c': 1, '.s': 2,
                   '.obj': 3, '.o': 3, '.lib': 4,
                   '.ar': 4, '.h': 5, '.sct': 4}
 
     def uv_file(self, loc):
+        """Return a namedtuple of information about project file
+        Positional Arguments:
+        loc - the file's location
+
+        .uvprojx XML for project file:
+        <File>
+            <FileType>{{file.type}}</FileType>
+            <FileName>{{file.name}}</FileName>
+            <FilePath>{{file.loc}}</FilePath>
+        </File>
+        """
         UVFile = namedtuple('UVFile', ['type','loc','name'])
         _, ext = os.path.splitext(loc)
         type = self.file_types[ext.lower()]
@@ -32,30 +49,27 @@ class Uvision(Exporter):
         return UVFile(type, loc, name)
 
     def make_key(self, src):
-        """turn a source file into its group name"""
+        """From a source file, extract group name
+        Positional Arguments:
+        src - the src's location
+        """
         key = basename(dirname(src.loc))
         if key == ".":
             key = basename(realpath(self.export_dir))
         return key
 
     def group_project_files(self, sources):
-        """Recursively roup the source files by their encompassing directory"""
+        """Group the source files by their encompassing directory
+        Positional Arguments:
+        sources - array of sourc locations
+
+        Returns a dictionary of {group name: list of source locations}
+        """
         data = sorted(sources, key=self.make_key)
         return {k: list(g) for k,g in groupby(data, self.make_key)}
 
-    def add_config(self):
-        if self.toolchain.get_config_header():
-            config_header = self.toolchain.get_config_header()
-            config_header = relpath(config_header,
-                                    self.resources.file_basepath[config_header])
-        else:
-            config_header = None
-
-        # we want to add this to our include dirs
-        config_dir = os.path.dirname(config_header) if config_header else []
-        self.resources.inc_dirs.append(config_dir)
-
     def format_flags(self):
+        """Format toolchain flags for Uvision"""
         flags = copy.deepcopy(self.flags)
         asm_flag_string = '--cpreproc --cpreproc_opts=-D__ASSERT_MSG,' + \
                           ",".join(flags['asm_flags'])
@@ -78,10 +92,10 @@ class Uvision(Exporter):
         try: flags['c_flags'].remove("--no_vla")
         except ValueError: pass
         flags['c_flags'] =" ".join(flags['c_flags'])
-        flags['ld_flags'] = flags['ld_flags']
         return flags
 
     def generate(self):
+        """Generate the .uvproj file"""
         cache = Cache(True, False)
         if cache_d:
             cache.cache_descriptors()
