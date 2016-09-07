@@ -9,10 +9,48 @@ from ArmPackManager import Cache
 
 from tools.targets import TARGET_MAP
 from tools.export.exporters import Exporter
-from tools.export.cmsis import deviceCMSIS
-import yaml
+from tools.export.cmsis import DeviceCMSIS
 
 cache_d = False
+
+
+class DeviceUvision(DeviceCMSIS):
+    """Uvision Device class
+
+    Encapsulates information necessary for uvision project targets"""
+    def __init__(self, target, use_generic_cpu=False):
+        DeviceCMSIS.__init__(self, target, use_generic_cpu)
+        dev_format = "$$Device:{0}${1}"
+        self.svd = ''
+        if self.debug_svd:
+            self.svd = dev_format.format(self.dname, self.debug_svd)
+        self.reg_file = dev_format.format(self.dname, self.compile_header)
+        self.debug_interface = self.uv_debug()
+
+    def uv_debug(self):
+        """Return a namedtuple of information about uvision debug settings"""
+        UVDebug = namedtuple('UVDebug',['bin_loc','core_flag'])
+
+        # CortexMXn => pCMX
+        cpu = self.core.replace("Cortex-", "C")
+        cpu = cpu.replace("+", "")
+        cpu = cpu.replace("F", "")
+        cpu_flag = "p"+cpu
+
+        # Locations found in Keil_v5/TOOLS.INI
+        debuggers = {"st-link":'STLink\\ST-LINKIII-KEIL_SWO.dll',
+                     "j-link":'Segger\\JL2CM3.dll',
+                     "cmsis-dap":'BIN\\CMSIS_AGDI.dll',
+                     "nu-link":'NULink\\Nu_Link.dll'}
+        binary = debuggers["cmsis-dap"]
+        for supported_debug in self.debug_interface:
+            for debug, bin_loc in debuggers.items():
+                if debug in supported_debug.lower():
+                    binary = bin_loc
+                    break
+
+        return UVDebug(binary, cpu_flag)
+
 
 class Uvision(Exporter):
     """Keil Uvision class
@@ -105,13 +143,12 @@ class Uvision(Exporter):
                self.resources.objects + self.resources.libraries
 
         srcs = [self.uv_file(src) for src in srcs]
-        self.add_config()
         ctx = {
             'name': self.project_name,
             'project_files': self.group_project_files(srcs),
             'linker_script':self.resources.linker_script,
             'include_paths': '; '.join(self.resources.inc_dirs).encode('utf-8'),
-            'device': deviceCMSIS(self.target)
+            'device': DeviceUvision(self.target)
         }
         ctx.update(self.format_flags())
         self.gen_file('uvision/uvision.tmpl', ctx, self.project_name+".uvprojx")
