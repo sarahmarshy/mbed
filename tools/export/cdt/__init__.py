@@ -4,7 +4,13 @@ from os import makedirs
 from tools.export.makefile import Makefile, GccArm, Armc5, IAR
 
 class Eclipse(Makefile):
+    """Generic Eclipse project. Intended to be subclassed by classes that
+    specify a type of Makefile.
+    """
     def generate(self):
+        """Generate Makefile, .cproject & .project Eclipse project file,
+        py_ocd_settings launch file, and software link .p2f file
+        """
         super(Eclipse, self).generate()
         ctx = {
             'name': self.project_name,
