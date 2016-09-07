@@ -34,7 +34,7 @@ EXPORTERS = {
     'lpcxpresso': codered.CodeRed,
     'gcc_arm': gccarm.GccArm,
     'ds5_5': ds5_5.DS5_5,
-    'iar': iar.IAREmbeddedWorkbench,
+    'iar': iar.IAR,
     'emblocks' : emblocks.IntermediateFile,
     'coide' : coide.CoIDE,
     'kds' : kds.KDS,
