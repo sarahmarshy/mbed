@@ -1,9 +1,12 @@
 import os
-from os.path import sep, join
+from os.path import sep, join, exists
 from collections import namedtuple
+from subprocess import Popen, PIPE
+from distutils.spawn import find_executable
+import re
 
 from tools.targets import TARGET_MAP
-from tools.export.exporters import Exporter
+from tools.export.exporters import Exporter, FailedBuildException
 import json
 class IAR(Exporter):
     NAME = 'iar'
@@ -97,3 +100,37 @@ class IAR(Exporter):
 
         self.gen_file('iar/eww.tmpl', ctx, self.project_name+".eww")
         self.gen_file(self.get_ewp_template(), ctx, self.project_name + ".ewp")
+
+    def _parse_subprocess_output(self, output):
+        num_errors = 0
+        lines = output.split("\n")
+        error_re = '\s*Total number of errors:\s*(\d+)\s*'
+        for line in lines:
+            m = re.match(error_re, line)
+            if m is not None:
+                num_errors = m.group(1)
+        return int(num_errors)
+
+    def build(self):
+        """ Build IAR project """
+        # > IarBuild [project_path] -build [project_name]
+        proj_file = join(self.export_dir, self.project_name + ".ewp")
+
+        if find_executable("IarBuild"):
+            iar_exe = "IarBuild.exe"
+        else:
+            iar_exe = join('C:', sep,
+                          'Program Files  (x86)', 'IAR Systems',
+                          'Embedded Workbench 7.5', 'common', 'bin',
+                          'IarBuild.exe')
+            if not exists(iar_exe):
+                raise Exception("UV4.exe not found. Add to path.")
+
+        cmd = [iar_exe, proj_file, '-build', self.project_name]
+        p = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+        output, err = p.communicate()
+        num_errors = self._parse_subprocess_output(output)
+        if num_errors !=0:
+            # Seems like something went wrong.
+            raise FailedBuildException("Project: %s build failed with %s erros" % (
+            proj_file, num_errors))
