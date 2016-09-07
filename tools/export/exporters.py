@@ -74,10 +74,19 @@ class Exporter(object):
         self.resources = resources
         self.generated_files = []
         self.builder_files_dict = {}
+        self.add_config()
 
     def get_toolchain(self):
         """A helper getter function that we should probably eliminate"""
         return self.TOOLCHAIN
+
+    def add_config(self):
+        """Add the containgin directory of mbed_config.h to include dirs"""
+        config = self.toolchain.get_config_header()
+        if config:
+            self.resources.inc_dirs.append(
+                dirname(relpath(config,
+                                self.resources.file_basepath[config])))
 
     @property
     def flags(self):
