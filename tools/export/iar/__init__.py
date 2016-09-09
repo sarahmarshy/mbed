@@ -24,7 +24,7 @@ class IAR(Exporter):
 
     SPECIAL_TEMPLATES = {
         'rz_a1h'  : 'iar/iar_rz_a1h.ewp.tmpl',
-        'nucleo_f746zg.ewp.tmpl' : 'iar/iar_rz_a1h.ewp.tmpl'
+        'nucleo_f746zg' : 'iar/nucleo_f746zg.ewp.tmpl'
     }
 
     def iar_groups(self, grouped_src):
