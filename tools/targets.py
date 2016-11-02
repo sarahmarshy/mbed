@@ -53,6 +53,10 @@ class HookError(Exception):
     """
     pass
 
+class TargetNotSupportedException(Exception):
+    """Indicates that an IDE/toolchain does not support a particular MCU"""
+    pass
+
 CACHES = {}
 def cached(func):
     """A simple decorator used for automatically caching data returned by a

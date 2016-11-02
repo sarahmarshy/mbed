@@ -21,15 +21,6 @@ from os.path import basename
 class DS5_5(Exporter):
     NAME = 'DS5'
 
-    TARGETS = [
-        'LPC1768',
-        'LPC11U24',
-        'LPC812',
-        'UBLOX_C027',
-        'ARCH_PRO',
-        'RZ_A1H',
-    ]
-
     USING_MICROLIB = [
         'LPC812',
     ]
@@ -41,6 +32,11 @@ class DS5_5(Exporter):
     }
 
     TOOLCHAIN = "ARM"
+
+    @staticmethod
+    def check_supported(target):
+        supported = ['LPC1768','LPC11U24','LPC812','UBLOX_C027','ARCH_PRO','RZ_A1H']
+        return Exporter.check_hard_coded_targets(target, supported)
 
     def get_toolchain(self):
         return 'uARM' if (self.target in self.USING_MICROLIB) else 'ARM'

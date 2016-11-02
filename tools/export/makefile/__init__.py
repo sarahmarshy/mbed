@@ -35,6 +35,10 @@ class Makefile(Exporter):
 
     MBED_CONFIG_HEADER_SUPPORTED = True
 
+    @staticmethod
+    def check_supported(target):
+        return (True, "")
+
     def generate(self):
         """Generate the makefile
 

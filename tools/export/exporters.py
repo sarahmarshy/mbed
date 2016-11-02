@@ -1,19 +1,17 @@
 """Just a template for subclassing"""
 import os
-import sys
 import logging
 from os.path import join, dirname, relpath, basename, realpath
 from itertools import groupby
 from jinja2 import FileSystemLoader
 from jinja2.environment import Environment
 import copy
+from collections import namedtuple
+from abc import abstractmethod, ABCMeta
 
 from tools.targets import TARGET_MAP
+from tools.utils import columnate
 
-
-class TargetNotSupportedException(Exception):
-    """Indicates that an IDE does not support a particular MCU"""
-    pass
 
 class ExporterTargetsProperty(object):
     """ Exporter descriptor for TARGETS
@@ -32,10 +30,11 @@ class Exporter(object):
     few helper methods for implementing an exporter with either jinja2 or
     progen.
     """
+
+    __metaclass__ = ABCMeta
     TEMPLATE_DIR = dirname(__file__)
     DOT_IN_RELATIVE_PATH = False
     NAME = None
-    TARGETS = None
     TOOLCHAIN = None
 
     def __init__(self, target, export_dir, project_name, toolchain,
@@ -142,6 +141,72 @@ class Exporter(object):
         """
         data = sorted(sources, key=self.make_key)
         return {k: list(g) for k,g in groupby(data, self.make_key)}
+
+    @staticmethod
+    @abstractmethod
+    def check_supported(target):
+        """Determine if an exporter supports a target, using criteria OTHER THAN
+         target/toolchain support. To be used in determine_support method in this class.
+
+         Positional arguments:
+         target - Target object (defined in tools/targets.py)
+
+         Returns tuple of (Boolean if supported, Error message if not supported)
+         """
+        raise NotImplemented("Implement in Exporter child class")
+
+    @staticmethod
+    def check_toolchain(target, toolchain):
+        """Check if a target supports a given toolchain
+
+        Positional arguments:
+        target - target name
+        toolchain - toolchain name
+
+        Returns True if the target supports the toolchain and False otherwise
+        """
+        target = TARGET_MAP[target]
+        if toolchain not in target.supported_toolchains:
+            return False
+        return True
+
+    @classmethod
+    def determine_support(cls, target):
+        """Determine whether the IDE supports the given target
+
+        Positional arguments:
+        target - the target to be used in exported project
+
+        Returns a namedtuple that has two attributes:
+            passed- to signify that the target is supported
+            error_message- populated if it has not passed
+        """
+        Support = namedtuple("Support", ["passed", "error_message"])
+        if not Exporter.check_toolchain(target, cls.TOOLCHAIN):
+            message = "%s supports %s toolchain. %s does not support " \
+                      "this toolchain."%(cls.NAME, cls.TOOLCHAIN, target)
+            return Support(False, message)
+        result = cls.check_supported(TARGET_MAP[target])
+        if not result[0]:
+            return Support(False, result[1])
+        return Support(True, "")
+
+    @staticmethod
+    def check_hard_coded_targets(target, supported):
+        """Used to determine if a target is supported in exporter child classes
+        that have hard coded lists of acceptable targets
+
+        Positional arguments:
+        target - the target to be used in exported project
+        supproted - the list of targets that are suppoted by the exporter
+
+        Returns a tuple of (boolean if the target is supported, string error message if not)
+        """
+        if target.name not in supported:
+            message = ("%s not in supported targets:\n%s"
+                       %(target.name, columnate(sorted(supported))))
+            return (False, message)
+        return (True, "")
 
     @staticmethod
     def build(project_name, log_name='build_log.txt', cleanup=True):

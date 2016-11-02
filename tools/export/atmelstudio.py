@@ -35,6 +35,11 @@ class AtmelStudio(Exporter):
 
     MBED_CONFIG_HEADER_SUPPORTED = True
 
+    @staticmethod
+    def check_supported(target):
+        supported = ['SAMD21J18A','SAMR21G18A','SAMD21G18A','SAML21J18A','SAMG55J19']
+        return Exporter.check_hard_coded_targets(target, supported)
+
     def generate(self):
 
         source_files = []

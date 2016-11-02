@@ -67,7 +67,9 @@ class Sw4STM32(Exporter):
         'NUCLEO_L476RG':    {'name': 'NUCLEO-L476RG',         'mcuId': 'STM32L476RGTx'},
     }
 
-    TARGETS = BOARDS.keys()
+    @staticmethod
+    def check_supported(target):
+        return Exporter.check_hard_coded_targets(target, Sw4STM32.BOARDS.keys())
 
     def __gen_dir(self, dirname):
         settings = join(self.export_dir, dirname)

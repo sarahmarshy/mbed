@@ -22,11 +22,9 @@ class KDS(Exporter):
     NAME = 'Kinetis Design Studio'
     TOOLCHAIN = 'GCC_ARM'
 
-    TARGETS = [
-        'K64F',
-        'HEXIWEAR',
-        'K22F',
-    ]
+    @staticmethod
+    def check_supported(target):
+        return Exporter.check_hard_coded_targets(target, ["K64F","HEXIWEAR", "K22F"])
 
     def generate(self):
         libraries = []

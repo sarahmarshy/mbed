@@ -22,9 +22,9 @@ class E2Studio(Exporter):
     NAME = 'e2 studio'
     TOOLCHAIN = 'GCC_ARM'
 
-    TARGETS = [
-        'RZ_A1H',
-    ]
+    @staticmethod
+    def check_supported(target):
+        return Exporter.check_hard_coded_targets(target, ["RZ_A1H"])
 
     def generate(self):
         libraries = []

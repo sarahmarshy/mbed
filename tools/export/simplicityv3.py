@@ -57,15 +57,6 @@ class SimplicityV3(Exporter):
     NAME = 'SimplicityV3'
     TOOLCHAIN = 'GCC_ARM'
 
-    TARGETS = [
-        'EFM32GG_STK3700',
-        'EFM32ZG_STK3200',
-        'EFM32LG_STK3600',
-        'EFM32WG_STK3800',
-        'EFM32HG_STK3400',
-        'EFM32PG_STK3401'
-    ]
-
     PARTS = {
         'EFM32GG_STK3700': 'com.silabs.mcu.si32.efm32.efm32gg.efm32gg990f1024',
         'EFM32ZG_STK3200': 'com.silabs.mcu.si32.efm32.efm32zg.efm32zg222f32',
@@ -104,6 +95,10 @@ class SimplicityV3(Exporter):
     MBED_CONFIG_HEADER_SUPPORTED = True
 
     orderedPaths = Folder("Root")
+
+    @staticmethod
+    def check_supported(target):
+        return Exporter.check_hard_coded_targets(target, SimplicityV3.PARTS.keys())
 
     def check_and_add_path(self, path):
         levels = path.split('/')

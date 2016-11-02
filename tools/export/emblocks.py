@@ -18,18 +18,10 @@ from exporters import Exporter
 from os.path import splitext, basename
 from tools.targets import TARGETS
 
-# filter all the GCC_ARM targets out of the target list
-gccTargets = []
-for t in TARGETS:
-    if 'GCC_ARM' in t.supported_toolchains:
-        gccTargets.append(t.name)
 
 class IntermediateFile(Exporter):
     NAME = 'EmBlocks'
     TOOLCHAIN = 'GCC_ARM'
-
-    # we support all GCC targets (is handled on IDE side)
-    TARGETS = gccTargets
 
     MBED_CONFIG_HEADER_SUPPORTED = True
 
@@ -39,6 +31,10 @@ class IntermediateFile(Exporter):
         's_sources': 'a',
         'cpp_sources': 'cpp'
     }
+
+    @staticmethod
+    def check_supported(target):
+        return (True, "")
 
 
     def generate(self):

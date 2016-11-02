@@ -12,6 +12,7 @@ import zipfile
 from tools.build_api import prepare_toolchain
 from tools.build_api import scan_resources
 from tools.export import EXPORTERS
+from tools.targets import TargetNotSupportedException
 from tools.toolchains import Resources
 
 
@@ -84,6 +85,7 @@ def generate_project_files(resources, export_path, target, name, toolchain, ide,
       project
     """
     exporter_cls, _ = get_exporter_toolchain(ide)
+
     exporter = exporter_cls(target, export_path, name, toolchain,
                             extra_symbols=macros, resources=resources)
     exporter.generate()
@@ -188,7 +190,10 @@ def export_project(src_paths, export_path, target, ide,
     if not exists(export_path):
         makedirs(export_path)
 
-    _, toolchain_name = get_exporter_toolchain(ide)
+    ex, toolchain_name = get_exporter_toolchain(ide)
+    support = ex.determine_support(target)
+    if not support.passed:
+        raise TargetNotSupportedException(support.error_message)
 
     # Pass all params to the unified prepare_resources()
     toolchain = prepare_toolchain(paths, target, toolchain_name,

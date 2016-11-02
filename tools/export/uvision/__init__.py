@@ -119,17 +119,14 @@ class Uvision(Exporter):
     """
     NAME = 'uvision5'
     TOOLCHAIN = 'ARM'
-    TARGETS = []
-    for target, obj in TARGET_MAP.iteritems():
-        if not ("ARM" in obj.supported_toolchains and hasattr(obj, "device_name")):
-            continue
-        if not DeviceCMSIS.check_supported(target):
-            continue
-        TARGETS.append(target)
     #File associations within .uvprojx file
     file_types = {'.cpp': 8, '.c': 1, '.s': 2,
                   '.obj': 3, '.o': 3, '.lib': 4,
                   '.ar': 4, '.h': 5, '.sct': 4}
+
+    @staticmethod
+    def check_supported(target):
+        return DeviceCMSIS.check_supported(target)
 
     def uv_file(self, loc):
         """Return a namedtuple of information about project file

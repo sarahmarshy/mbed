@@ -25,17 +25,21 @@ class IAR(Exporter):
     with open(def_loc, 'r') as f:
         IAR_DEFS = json.load(f)
 
-    #supported targets have a device name and corresponding definition in
-    #iar_definitions.json
-    TARGETS = [target for target, obj in TARGET_MAP.iteritems()
-               if hasattr(obj, 'device_name') and
-               obj.device_name in IAR_DEFS.keys() and "IAR" in obj.supported_toolchains
-               and DeviceCMSIS.check_supported(target)]
-
     SPECIAL_TEMPLATES = {
         'rz_a1h'  : 'iar/iar_rz_a1h.ewp.tmpl',
         'nucleo_f746zg' : 'iar/iar_nucleo_f746zg.ewp.tmpl'
     }
+
+    @staticmethod
+    def check_supported(target):
+        cmsis_check = DeviceCMSIS.check_supported(target)
+        if not cmsis_check[0]:
+            return cmsis_check
+        if target.device_name not in IAR.IAR_DEFS.keys():
+            message = "%s not in 'tools/export/iar/iar_defs.py, please add IAR " \
+                  "CPU information there."%target.device_name
+            return (False, message)
+        return (True, "")
 
     def iar_groups(self, grouped_src):
         """Return a namedtuple of group info

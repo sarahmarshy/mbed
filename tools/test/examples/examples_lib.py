@@ -113,7 +113,7 @@ def target_cross_ide(allowed_ides,
     for target, toolchains in get_mbed_official_release("5"):
         for ide in allowed_ides:
             if (EXPORTERS[ide].TOOLCHAIN in toolchains and
-                target in EXPORTERS[ide].TARGETS and
+                EXPORTERS[ide].determine_support(target).passed and
                 target in targets and
                 all(feature in TARGET_MAP[target].features
                     for feature in features)):

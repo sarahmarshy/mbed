@@ -75,6 +75,23 @@ class CoIDE(Exporter):
         'headers':'1'
     }
 
+    @staticmethod
+    def check_supported(self, target):
+        supported = ['KL25Z','KL05Z','LPC1768','ARCH_PRO','ARCH_MAX','UBLOX_C027',
+            'NUCLEO_L011K4','NUCLEO_L053R8','NUCLEO_L152RE','NUCLEO_F030R8',
+            'NUCLEO_F042K6','NUCLEO_F070RB','NUCLEO_F072RB','NUCLEO_F091RC',
+            'NUCLEO_F103RB','NUCLEO_F207ZG','NUCLEO_F302R8','NUCLEO_F303K8',
+            'NUCLEO_F303RE','NUCLEO_F334R8','NUCLEO_F303ZE','NUCLEO_F401RE',
+            'NUCLEO_F410RB','NUCLEO_F411RE','NUCLEO_F429ZI','NUCLEO_F446RE',
+            'NUCLEO_F446ZE','DISCO_L053C8','DISCO_F051R8','DISCO_F100RB',
+            'DISCO_F303VC','DISCO_F334C8','DISCO_F401VC','DISCO_F407VG',
+            'DISCO_F429ZI','DISCO_F469NI','MTS_MDOT_F405RG',
+            'MTS_MDOT_F411RE','MOTE_L152RC','NZ32_SC151',
+        ]
+        return Exporter.check_hard_coded_targets(target, supported)
+
+
+
     def generate(self):
         self.resources.win_to_unix()
         source_files = []

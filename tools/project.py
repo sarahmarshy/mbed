@@ -9,9 +9,11 @@ sys.path.insert(0, ROOT)
 from shutil import move, rmtree
 from argparse import ArgumentParser
 from os.path import normpath, realpath
+from sys import stderr
 
 from tools.paths import EXPORT_DIR, MBED_HAL, MBED_LIBRARIES
 from tools.export import EXPORTERS, mcu_ide_matrix
+from tools.targets import TargetNotSupportedException
 from tools.tests import TESTS, TEST_MAP
 from tools.tests import test_known, test_name_known, Test
 from tools.targets import TARGET_NAMES
@@ -233,13 +235,15 @@ def main():
         args_error(parser, "one of -p, -n, or --source is required")
         # Export to selected toolchain
     exporter, toolchain_name = get_exporter_toolchain(options.ide)
-    if options.mcu not in exporter.TARGETS:
-        args_error(parser, "%s not supported by %s"%(options.mcu,options.ide))
     profile = extract_profile(parser, options, toolchain_name)
-    export(options.mcu, options.ide, build=options.build,
+    try:
+        export(options.mcu, options.ide, build=options.build,
            src=options.source_dir, macros=options.macros,
            project_id=options.program, clean=options.clean,
            zip_proj=zip_proj, build_profile=profile)
+    except TargetNotSupportedException as e:
+        stderr.write("[ERROR] "+str(e)+"\n")
+        exit(-1)
 
 
 if __name__ == "__main__":

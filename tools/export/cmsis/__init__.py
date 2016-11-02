@@ -8,7 +8,7 @@ import json
 
 from tools.arm_pack_manager import Cache
 from tools.targets import TARGET_MAP
-from tools.export.exporters import Exporter, TargetNotSupportedException
+from tools.export.exporters import Exporter
 
 class fileCMSIS():
     """CMSIS file class.
@@ -31,12 +31,24 @@ class DeviceCMSIS():
 
     Encapsulates target information retrieved by arm-pack-manager"""
 
+
+    MISSING_DNAME = ("A 'device_name' field for %s in 'targets/targets.json' is required "
+                    "to export to this IDE. Please add a valid CMSIS pack "
+                    "device name to this target's description. See the 'device_name' "
+                    "section of 'docs/mbed_targets.md' "
+                    "for more information.")
+
+    DNAME_NOT_IN_CMSIS = ("[WARNING] The 'device_name' %s for %s as listed in targets/targets.json is "
+                         "not present in any CMSIS pack. Please check support according "
+                         "to the 'device_name' section of docs/mbed_targets.md. "
+                         "\nAttempting to resolve target to generic ARM core...")
+
+    CPU_ERROR = "Could not find %s as a CMSIS target."
+
+
     CACHE = Cache(True, False)
     def __init__(self, target):
-        target_info = self.check_supported(target)
-        if not target_info:
-            raise TargetNotSupportedException("Target not supported in CMSIS pack")
-
+        target_info = DeviceCMSIS.check_supported(TARGET_MAP[target], verbose=False)[1]
         self.url = target_info['pdsc_file']
         self.pack_url, self.pack_id = ntpath.split(self.url)
         self.dname = target_info["_cpu_name"]
@@ -49,22 +61,53 @@ class DeviceCMSIS():
         self.target_info = target_info
 
     @staticmethod
-    def check_supported(target):
-        t = TARGET_MAP[target]
+    def check_supported(target, verbose=True):
+        """Checks if a target has relevent CMSIS PDSC file
+
+        Positional arguments:
+        target - the target to determine support for
+        Keyword arguments:
+        verbose - print warning/status messages
+
+        On success: Returns (True, target info found in CMSIS packs)
+        On fail: Returns (False, reason it is not supported)
+        """
+
+        #Check if the target has a devie_name
+        if not hasattr(target, "device_name"):
+            #It doesn't, so there is no possiblity of finding it in a CMSIS pack
+            #Return that it is not supported and message explaining why
+            return (False,DeviceCMSIS.MISSING_DNAME%target.name)
+
+        #Get the target's device name
+        cpu_name = target.device_name
         try:
-            cpu_name = t.device_name
+            #Check if it has information in the cache
             target_info = DeviceCMSIS.CACHE.index[cpu_name]
         # Target does not have device name or pdsc file
         except:
+            if verbose:
+                #We can't find the device information in CMSIS PDSC
+                print DeviceCMSIS.DNAME_NOT_IN_CMSIS%(cpu_name,target.name,)
+            #We will now try to find the target's core in CMSIS Packs
+
+            #Format the core in the way CMSIS packs lists them
+            cpu_name = DeviceCMSIS.cpu_cmsis(target.core)
             try:
-                # Try to find the core as a generic CMSIS target
-                cpu_name = DeviceCMSIS.cpu_cmsis(t.core)
-                target_info = DeviceCMSIS.index[cpu_name]
+                # Try to find the core as a CMSIS target
+                target_info = DeviceCMSIS.CACHE.index[cpu_name]
             except:
-                return False
+                #The core does not have information either
+                #Return that this target is conclusively not supported, and
+                #a message explaining why
+                return (False, DeviceCMSIS.CPU_ERROR%cpu_name)
+            else:
+                #We have found the core as a CMSIS device
+                if verbose:
+                    print "SUCCESS! Setting %s as target."%cpu_name
         target_info["_cpu_name"] = cpu_name
-        target_info["_core"] = t.core
-        return target_info
+        target_info["_core"] = target.core
+        return (True,target_info)
 
     def vendor_debug(self, vendor):
         reg = "([\w\s]+):?\d*?"
