@@ -27,7 +27,7 @@ ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.insert(0, ROOT)
 
 from tools.config import ConfigException
-from tools.test_api import test_path_to_name, find_tests, print_tests, build_tests, test_spec_from_test_builds
+from tools.test_api import test_path_to_name, find_tests, find_configs, print_tests, build_tests, test_spec_from_test_builds
 from tools.options import get_default_options_parser, extract_profile, extract_mcus
 from tools.build_api import build_project, build_library
 from tools.build_api import print_build_memory_usage
@@ -44,12 +44,12 @@ if __name__ == '__main__':
     try:
         # Parse Options
         parser = get_default_options_parser(add_app_config=True)
-        
+
         parser.add_argument("-D",
                           action="append",
                           dest="macros",
                           help="Add a macro definition")
-       
+
         parser.add_argument("-j", "--jobs",
                           type=int,
                           dest="jobs",
@@ -76,24 +76,27 @@ if __name__ == '__main__':
         parser.add_argument("-f", "--format", dest="format",
                             type=argparse_lowercase_type(format_choices, "format"),
                             default=format_default_choice, help=format_help)
-        
+
         parser.add_argument("--continue-on-build-fail", action="store_true", dest="continue_on_build_fail",
                           default=None, help="Continue trying to build all tests if a build failure occurs")
 
         #TODO validate the names instead of just passing through str
         parser.add_argument("-n", "--names", dest="names", type=argparse_many(str),
                           default=None, help="Limit the tests to a comma separated list of names")
-                          
+
+        parser.add_argument("--net-config", dest="net_config", type=str,
+                          default="EthernetInterface", help="Limit the tests to a networkinterface")
+
         parser.add_argument("--test-spec", dest="test_spec",
                           default=None, help="Destination path for a test spec file that can be used by the Greentea automated test tool")
-        
+
         parser.add_argument("--build-report-junit", dest="build_report_junit",
                           default=None, help="Destination path for a build report in the JUnit xml format")
         parser.add_argument("--build-data",
                             dest="build_data",
                             default=None,
                             help="Dump build_data to this file")
-        
+
         parser.add_argument("-v", "--verbose",
                           action="store_true",
                           dest="verbose",
@@ -127,10 +130,19 @@ if __name__ == '__main__':
                                "Currently set search path: %s"
                        % (toolchain, search_path))
 
+        net_configs = find_configs(mcu) # will be {} if target has no network configs
+        # If there is no app config and the target has network configs
+        # TODO: merge app_config and net_config if there is both
+        if net_configs and not options.app_config:
+            # use a specified network config
+            config = net_configs[options.net_config]
+        else:
+            config = options.app_config
+
         # Find all tests in the relevant paths
         for path in all_paths:
-            all_tests.update(find_tests(path, mcu, toolchain, 
-                                        app_config=options.app_config))
+            all_tests.update(find_tests(path, mcu, toolchain,
+                                        app_config=config))
 
         # Filter tests by name if specified
         if options.names:
@@ -172,7 +184,7 @@ if __name__ == '__main__':
             # Default base source path is the current directory
             if not base_source_paths:
                 base_source_paths = ['.']
-            
+
             build_report = {}
             build_properties = {}
 
@@ -186,7 +198,7 @@ if __name__ == '__main__':
                               properties=build_properties, name="mbed-build",
                               macros=options.macros, verbose=options.verbose,
                               notify=notify, archive=False,
-                              app_config=options.app_config,
+                              app_config=config,
                               build_profile=profile)
 
                 library_build_success = True
@@ -214,7 +226,7 @@ if __name__ == '__main__':
                         notify=notify,
                         jobs=options.jobs,
                         continue_on_build_fail=options.continue_on_build_fail,
-                                                             app_config=options.app_config,
+                                                             app_config=config,
                                                              build_profile=profile)
 
                 # If a path to a test spec is provided, write it to a file
