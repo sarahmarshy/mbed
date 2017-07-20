@@ -2008,7 +2008,7 @@ def find_configs(target_name):
     except AttributeError:
         return {}
 
-def find_tests(base_dir, target_name, toolchain_name, app_config=None):
+def find_tests(base_dir, target_name, toolchain_name, app_config=None, module_config=None):
     """ Finds all tests in a directory recursively
     base_dir: path to the directory to scan for tests (ex. 'path/to/project')
     target_name: name of the target to use for scanning (ex. 'K64F')
@@ -2049,7 +2049,7 @@ def find_tests(base_dir, target_name, toolchain_name, app_config=None):
                     test_group_directory = os.path.basename(test_group_directory_path)
 
                     # If the target has no network interface configuration, netsocket tests fail to compile
-                    if not configs and \
+                    if not module_config and not configs and \
                         (test_case_directory == 'netsocket' or test_group_directory == 'netsocket'):
                         continue
 
