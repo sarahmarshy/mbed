@@ -520,7 +520,11 @@ class Config(object):
             rom_size = int(cmsis_part['memory']['IROM1']['size'], 0)
             rom_start = int(cmsis_part['memory']['IROM1']['start'], 0)
         except KeyError:
-            raise ConfigException("Not enough information in CMSIS packs to "
+            try:
+                rom_size = int(cmsis_part['memory']['PROGRAM_FLASH']['size'], 0)
+                rom_start = int(cmsis_part['memory']['PROGRAM_FLASH']['start'], 0)
+            except KeyError:
+                raise ConfigException("Not enough information in CMSIS packs to "
                                   "build a bootloader project")
         if  ('target.bootloader_img' in target_overrides or
              'target.restrict_size' in target_overrides):
