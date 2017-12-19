@@ -80,6 +80,7 @@ class PackFlashAlgo(object):
         self.flash_size = self.flash_info.size
         self.page_size = self.flash_info.page_size
         self.sector_sizes = self.flash_info.sector_info_list
+        self.num_sectors = len(self.sector_sizes)*2
 
         symbols = {}
         symbols.update(_extract_symbols(self.elf, self.REQUIRED_SYMBOLS))
