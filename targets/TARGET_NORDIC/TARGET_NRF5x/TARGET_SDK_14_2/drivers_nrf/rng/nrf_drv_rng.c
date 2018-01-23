@@ -188,6 +188,7 @@ void nrf_drv_rng_bytes_available(uint8_t * p_bytes_available)
 #ifdef SOFTDEVICE_PRESENT
     if (NRF_DRV_RNG_SD_IS_ENABLED())
     {
+        printf("ENABLED\r\n");
         if (NRF_SUCCESS == sd_rand_application_bytes_available_get(p_bytes_available))
         {
             return;
