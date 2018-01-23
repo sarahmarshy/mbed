@@ -16,9 +16,28 @@
 
 /* Linker script to configure memory regions. */
 
+
+#if defined(MBED_APP_START)
+    #define MBED_APP_TEMP MBED_APP_START
+#else 
+    #define MBED_APP_TEMP 0x0000
+#endif
+
+#if !defined(MBED_APP_SIZE)
+  #define MBED_APP_SIZE 0x5d000
+#endif
+
+#if defined(SOFTDEVICE_PRESENT)
+    #define MBED_APP_START 0x23000+MBED_APP_TEMP
+#else 
+    #define MBED_APP_START 0x0000+MBED_APP_TEMP
+#endif
+
+
+
 MEMORY
 {
-  FLASH (rx) : ORIGIN = 0x23000, LENGTH = 0x5d000
+  FLASH (rx) : ORIGIN = MBED_APP_START, LENGTH = MBED_APP_SIZE
   RAM (rwx) :  ORIGIN = 0x20003000, LENGTH = 0xd000
 }
 
