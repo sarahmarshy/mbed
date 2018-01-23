@@ -3295,7 +3295,7 @@
         "public": false,
         "detect_code": ["1101"],
         "program_cycle_s": 6,
-        "MERGE_SOFT_DEVICE": true,
+        "MERGE_SOFT_DEVICE": false,
         "EXPECTED_SOFTDEVICES_WITH_OFFSETS": [
             {
                 "boot": "",
