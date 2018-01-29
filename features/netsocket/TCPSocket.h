@@ -24,7 +24,8 @@
 #include "netsocket/NetworkStack.h"
 #include "netsocket/NetworkInterface.h"
 #include "rtos/EventFlags.h"
-
+#include <stdint.h>
+#include <map>
 
 /** TCP socket connection
  */
@@ -77,15 +78,15 @@ public:
      *  @return         0 on success, negative error code on failure
      */
     nsapi_error_t connect(const SocketAddress &address);
-    
+
     /** Send data over a TCP socket
      *
      *  The socket must be connected to a remote host. Returns the number of
      *  bytes sent from the buffer.
      *
-     *  By default, send blocks until data is sent. If socket is set to
-     *  non-blocking or times out, NSAPI_ERROR_WOULD_BLOCK is returned
-     *  immediately.
+     *  By default, send blocks until all data is sent. If socket is set to
+     *  non-blocking or times out, a partial amount can be written.
+     *  NSAPI_ERROR_WOULD_BLOCK is returned if no data was written.
      *
      *  @param data     Buffer of data to send to the host
      *  @param size     Size of the buffer in bytes
@@ -93,15 +94,15 @@ public:
      *                  code on failure
      */
     nsapi_size_or_error_t send(const void *data, nsapi_size_t size);
-    
+
     /** Receive data over a TCP socket
      *
      *  The socket must be connected to a remote host. Returns the number of
      *  bytes received into the buffer.
      *
-     *  By default, recv blocks until data is sent. If socket is set to
-     *  non-blocking or times out, NSAPI_ERROR_WOULD_BLOCK is returned
-     *  immediately.
+     *  By default, recv blocks until some data is received. If socket is set to
+     *  non-blocking or times out, NSAPI_ERROR_WOULD_BLOCK can be returned to
+     *  indicate no data.
      *
      *  @param data     Destination buffer for data received from the host
      *  @param size     Size of the buffer in bytes
@@ -109,6 +110,16 @@ public:
      *                  code on failure
      */
     nsapi_size_or_error_t recv(void *data, nsapi_size_t size);
+
+    /**
+     *  Get number of TCP bytes sent aggregated across all TCP sockets.
+     */
+    static uint32_t get_tcp_bytes_sent(void);
+
+    /**
+     *  Get number of TCP bytes received aggregated across all TCP sockets.
+     */
+    static uint32_t get_tcp_bytes_received(void);
 
 protected:
     friend class TCPServer;
@@ -120,6 +131,9 @@ protected:
     rtos::EventFlags _event_flag;
     bool _read_in_progress;
     bool _write_in_progress;
+
+    static std::map<TCPSocket*, uint32_t> tcp_socket_to_bytes_sent;
+    static std::map<TCPSocket*, uint32_t> tcp_socket_to_bytes_recv;
 };
 
 

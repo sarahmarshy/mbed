@@ -25,6 +25,10 @@
 #include "netsocket/NetworkInterface.h"
 #include "rtos/EventFlags.h"
 
+#include <stdint.h>
+
+#include <map>
+
 
 /** UDP socket
  */
@@ -48,6 +52,7 @@ public:
         : _pending(0), _event_flag(0)
     {
         open(stack);
+        udp_socket_to_bytes_sent[this] = 0;
     }
 
     /** Destroy a socket
@@ -112,12 +117,26 @@ public:
     nsapi_size_or_error_t recvfrom(SocketAddress *address,
             void *data, nsapi_size_t size);
 
+    /**
+    * Get number of UDP bytes sent aggregated across all UDP sockets.
+    */
+    static uint32_t get_udp_bytes_sent(void);
+
+    /**
+    * Get number of UDP bytes received aggregated across all UDP sockets.
+    */
+    static uint32_t get_udp_bytes_received(void);
+
+
 protected:
     virtual nsapi_protocol_t get_proto();
     virtual void event();
 
     volatile unsigned _pending;
     rtos::EventFlags _event_flag;
+
+    static std::map<UDPSocket*, uint32_t> udp_socket_to_bytes_sent;
+    static std::map<UDPSocket*, uint32_t> udp_socket_to_bytes_recv;
 };
 
 
