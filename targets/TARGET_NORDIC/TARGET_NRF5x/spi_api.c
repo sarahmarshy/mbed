@@ -55,7 +55,22 @@ void spi_free(spi_t *obj);
  * @param[in]     mode  The SPI mode (clock polarity, phase, and shift direction)
  * @param[in]     slave Zero for master mode or non-zero for slave mode
  */
-void spi_format(spi_t *obj, int bits, int mode, int slave);
+void spi_format(spi_t *obj, int bits, int mode, int slave)
+{
+    struct spi_s *spi_inst = obj;
+    nrf_drv_spi_config_t *config = &(spi_inst->config);
+    if(mode == 0)
+        config->mode = NRF_DRV_SPI_MODE_0;
+    else if(mode == 1)
+        config->mode = NRF_DRV_SPI_MODE_1;
+    else if(mode == 2)
+        config->mode = NRF_DRV_SPI_MODE_2;
+    else if(mode == 3)
+        config->mode = NRF_DRV_SPI_MODE_3;
+
+    //TODO: bits???
+}
+         
 
 /** Set the SPI baud rate
  *
