@@ -27,7 +27,7 @@ void spi_init(spi_t *obj, PinName mosi, PinName miso, PinName sclk, PinName ssel
     config.mosi_pin = mosi;
     config.miso_pin = miso;
     config.ss_pin = ssel; 
-    memcpy(&(spi_inst->config), &config, sizeof(nrf_drv_spi_t));
+    memcpy(&(spi_inst->config), &config, sizeof(nrf_drv_spi_config_t));
     int instance = 0;
     nrf_drv_spi_t spi_drv_inst = NRF_DRV_SPI_INSTANCE(0);
     memcpy(&(spi_inst->spi_drv_inst), &spi_drv_inst, sizeof(nrf_drv_spi_t)); 
