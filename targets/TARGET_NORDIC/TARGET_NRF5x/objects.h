@@ -43,6 +43,7 @@
 #include "PortNames.h"
 #include "PeripheralNames.h"
 #include "PinNames.h"
+#include "nrf_drv_spi.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -54,6 +55,7 @@ struct serial_s {
 
 struct spi_s {
     uint8_t spi_idx;
+    nrf_drv_spi_config_t config;    
 };
 
 struct port_s {
