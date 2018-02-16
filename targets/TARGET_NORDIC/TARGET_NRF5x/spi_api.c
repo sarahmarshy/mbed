@@ -8,6 +8,8 @@
 #define SPI_INSTANCE_COUNT 3
 #define INSTANCE_ID 0
 
+static const nrf_drv_spi_t nordic_nrf5_spi_instance[3] = {NRF_DRV_SPI_INSTANCE(0), NRF_DRV_SPI_INSTANCE(1), NRF_DRV_SPI_INSTANCE(2)};
+
 /** Initialize the SPI peripheral
  *
  * Configures the pins used by SPI, sets a default format and frequency, and enables the peripheral
@@ -29,9 +31,8 @@ void spi_init(spi_t *obj, PinName mosi, PinName miso, PinName sclk, PinName ssel
     memcpy(&(spi_inst->config), &config, sizeof(nrf_drv_spi_config_t));
     /* TODO: use pin configuration to choose instance instead of hard coded value */
     int instance = 0;
-    nrf_drv_spi_t spi_drv_inst = NRF_DRV_SPI_INSTANCE(0);
+    nrf_drv_spi_t spi_drv_inst = nordic_nrf5_spi_instance[instance];
     memcpy(&(spi_inst->spi_drv_inst), &spi_drv_inst, sizeof(nrf_drv_spi_t)); 
-    uint32_t err = nrf_drv_spi_init(&(spi_inst->spi_drv_inst), &(spi_inst->config), NULL, NULL); 
     
 }
 
@@ -125,6 +126,8 @@ int  spi_master_write(spi_t *obj, int value)
     struct spi_s *spi_obj = obj;
     const uint8_t tx_buff[1] = {(uint8_t) value};
     uint8_t rx_buff[1];
+    spi_free(obj);
+    uint32_t err = nrf_drv_spi_init(&(spi_obj->spi_drv_inst), &(spi_obj->config), NULL, NULL); 
     nrf_drv_spi_transfer(&(spi_obj->spi_drv_inst), tx_buff, 1, rx_buff, 1);
     return rx_buff[0];
 }
@@ -147,8 +150,10 @@ int  spi_master_write(spi_t *obj, int value)
 int spi_master_block_write(spi_t *obj, const char *tx_buffer, int tx_length, char *rx_buffer, int rx_length, char write_fill)
 {
     struct spi_s *spi_obj = obj;
+    spi_free(obj);
+    uint32_t err = nrf_drv_spi_init(&(spi_obj->spi_drv_inst), &(spi_obj->config), NULL, NULL); 
     nrf_drv_spi_transfer(&(spi_obj->spi_drv_inst), (const uint8_t *) tx_buffer, tx_length, (uint8_t *) rx_buffer, rx_length);
-    int max = rx_length < tx_length ? tx_length : rx_length;
+    int max = (rx_length < tx_length) ? tx_length : rx_length;
     return max; 
 } 
 
