@@ -45,7 +45,11 @@ void spi_init(spi_t *obj, PinName mosi, PinName miso, PinName sclk, PinName ssel
  * Disable the SPI clock
  * @param[in] obj The SPI object to deinitialize
  */
-void spi_free(spi_t *obj);
+void spi_free(spi_t *obj)
+{
+    struct spi_s *spi_inst = obj;
+    nrf_drv_spi_uninit(&(spi_inst->spi_drv_inst)); 
+}
 
 /** Configure the SPI format
  *
