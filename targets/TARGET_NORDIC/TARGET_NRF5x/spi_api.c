@@ -20,7 +20,6 @@
 void spi_init(spi_t *obj, PinName mosi, PinName miso, PinName sclk, PinName ssel)
 {
     struct spi_s *spi_inst = obj;
-    /* TODO: use pin configuration to choose instance instead of hard coded value */
  
     nrf_drv_spi_config_t config = NRF_DRV_SPI_DEFAULT_CONFIG;
     config.sck_pin = sclk;
@@ -28,6 +27,7 @@ void spi_init(spi_t *obj, PinName mosi, PinName miso, PinName sclk, PinName ssel
     config.miso_pin = miso;
     config.ss_pin = ssel; 
     memcpy(&(spi_inst->config), &config, sizeof(nrf_drv_spi_config_t));
+    /* TODO: use pin configuration to choose instance instead of hard coded value */
     int instance = 0;
     nrf_drv_spi_t spi_drv_inst = NRF_DRV_SPI_INSTANCE(0);
     memcpy(&(spi_inst->spi_drv_inst), &spi_drv_inst, sizeof(nrf_drv_spi_t)); 
@@ -119,9 +119,8 @@ void spi_frequency(spi_t *obj, int hz)
 int  spi_master_write(spi_t *obj, int value)
 {
     struct spi_s *spi_obj = obj;
-    int tx_buff[1];
-    int rx_buff[1];
-    tx_buff[0] = value;
+    const uint8_t tx_buff[1] = {(uint8_t) value};
+    uint8_t rx_buff[1];
     nrf_drv_spi_transfer(&(spi_obj->spi_drv_inst), tx_buff, 1, rx_buff, 1);
     return rx_buff[0];
 }
@@ -144,7 +143,7 @@ int  spi_master_write(spi_t *obj, int value)
 int spi_master_block_write(spi_t *obj, const char *tx_buffer, int tx_length, char *rx_buffer, int rx_length, char write_fill)
 {
     struct spi_s *spi_obj = obj;
-    nrf_drv_spi_transfer(&(spi_obj->spi_drv_inst), tx_buffer, tx_length, rx_buffer, rx_length);
+    nrf_drv_spi_transfer(&(spi_obj->spi_drv_inst), (const uint8_t *) tx_buffer, tx_length, (uint8_t *) rx_buffer, rx_length);
     int max = rx_length < tx_length ? tx_length : rx_length;
     return max; 
 } 
