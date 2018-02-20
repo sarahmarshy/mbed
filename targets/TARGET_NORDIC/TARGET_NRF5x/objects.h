@@ -56,6 +56,7 @@ struct serial_s {
 struct spi_s {
     nrf_drv_spi_t spi_drv_inst;
     nrf_drv_spi_config_t config;    
+    int instance;
 };
 
 struct port_s {
