@@ -100,7 +100,7 @@ void spi_frequency(spi_t *obj, int hz)
         new_freq = NRF_DRV_SPI_FREQ_1M;
     } else if (hz < 4000000) {
         new_freq = NRF_DRV_SPI_FREQ_2M;
-    } else if (hz < 800000) {
+    } else if (hz < 8000000) {
         new_freq = NRF_DRV_SPI_FREQ_4M;
     } else {
         new_freq = NRF_DRV_SPI_FREQ_8M;
