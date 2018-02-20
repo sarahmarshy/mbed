@@ -162,7 +162,10 @@ int spi_master_block_write(spi_t *obj, const char *tx_buffer, int tx_length, cha
  * @param[in] obj The SPI peripheral to check
  * @return non-zero if a value is available
  */
-int  spi_slave_receive(spi_t *obj);
+int  spi_slave_receive(spi_t *obj)
+{
+    return 0;
+}
 
 /** Get a received value out of the SPI receive buffer in slave mode
  *
@@ -170,7 +173,10 @@ int  spi_slave_receive(spi_t *obj);
  * @param[in] obj The SPI peripheral to read
  * @return The value received
  */
-int  spi_slave_read(spi_t *obj);
+int  spi_slave_read(spi_t *obj)
+{
+    return 0;
+}
 
 /** Write a value to the SPI peripheral in slave mode
  *
@@ -178,21 +184,30 @@ int  spi_slave_read(spi_t *obj);
  * @param[in] obj   The SPI peripheral to write
  * @param[in] value The value to write
  */
-void spi_slave_write(spi_t *obj, int value);
+void spi_slave_write(spi_t *obj, int value)
+{
+    return 0;
+}
 
 /** Checks if the specified SPI peripheral is in use
  *
  * @param[in] obj The SPI peripheral to check
  * @return non-zero if the peripheral is currently transmitting
  */
-int  spi_busy(spi_t *obj);
+int  spi_busy(spi_t *obj)
+{
+    return 0;
+}
 
 /** Get the module number
  *
  * @param[in] obj The SPI peripheral to check
  * @return The module number
  */
-uint8_t spi_get_module(spi_t *obj);
+uint8_t spi_get_module(spi_t *obj)
+{
+    return 0;
+}
 
 /**@}*/
 
