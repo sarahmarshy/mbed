@@ -63,7 +63,7 @@ NRF_LOG_MODULE_REGISTER();
 
 #define SPIM_ONLY        ( defined(SPIM_PRESENT)  && !defined(SPI_PRESENT))
 #define SPI_SPIM_PRESENT ( defined(SPIM_PRESENT)  &&  defined(SPI_PRESENT))
-#define SPI_ONLY         (!defined(SPIM_PRESENT) &&   defined(SPI_PRESENT))
+#define SPI_ONLY         (!SPIM_PRESENT &&   defined(SPI_PRESENT))
 
 #define SPI0_WITH_DMA (defined(SPI0_USE_EASY_DMA) && SPI0_USE_EASY_DMA && SPI0_ENABLED)
 #define SPI1_WITH_DMA (defined(SPI1_USE_EASY_DMA) && SPI1_USE_EASY_DMA && SPI1_ENABLED)
