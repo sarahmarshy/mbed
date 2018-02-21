@@ -170,8 +170,13 @@ int spi_master_block_write(spi_t *obj, const char *tx_buffer, int tx_length, cha
         uint32_t err = nrf_drv_spi_init(&(spi_obj->spi_drv_inst), &(spi_obj->config), NULL, NULL); 
         nordic_nrf5_owner[instance] = obj;
     }
-    nrf_drv_spi_transfer(&(spi_obj->spi_drv_inst), (const uint8_t *) tx_buffer, tx_length, (uint8_t *) rx_buffer, rx_length);
     int max = (rx_length < tx_length) ? tx_length : rx_length;
+    for(int i = 0; i < max; i++) {
+        if (i < tx_length)
+            rx_buffer[i] = spi_master_write(obj, tx_buffer[i]);
+        else
+            rx_buffer[i] = spi_master_write(obj, 255);
+    }
     return max; 
 } 
 
