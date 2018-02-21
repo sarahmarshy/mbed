@@ -79,6 +79,8 @@ void spi_format(spi_t *obj, int bits, int mode, int slave)
         config->mode = NRF_DRV_SPI_MODE_2;
     else if(mode == 3)
         config->mode = NRF_DRV_SPI_MODE_3;
+    int instance = spi_inst->instance;
+    nordic_nrf5_owner[instance] = NULL;
 
     //TODO: bits???
 }
@@ -112,6 +114,8 @@ void spi_frequency(spi_t *obj, int hz)
         new_freq = NRF_DRV_SPI_FREQ_8M;
     }
     config->frequency = new_freq;
+    int instance = spi_inst->instance;
+    nordic_nrf5_owner[instance] = NULL;
 }
          
 
