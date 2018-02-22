@@ -346,6 +346,12 @@ void nrf_drv_spi_uninit(nrf_drv_spi_t const * const p_instance)
     p_cb->state = NRF_DRV_STATE_UNINITIALIZED;
 }
 
+bool nrf_drv_spi_busy(nrf_drv_spi_t const * const p_instance)
+{
+    spi_control_block_t * p_cb = &m_cb[p_instance->drv_inst_idx];
+    return p_cb->transfer_in_progress;
+}
+
 ret_code_t nrf_drv_spi_transfer(nrf_drv_spi_t const * const p_instance,
                                 uint8_t const * p_tx_buffer,
                                 uint8_t         tx_buffer_length,

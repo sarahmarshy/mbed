@@ -160,7 +160,8 @@ void spi_slave_write(spi_t *obj, int value)
 
 int  spi_busy(spi_t *obj)
 {
-    return 0;
+    struct spi_s *spi_obj = obj;
+    return nrf_drv_spi_busy(&(spi_obj->spi_drv_inst)); 
 }
 
 uint8_t spi_get_module(spi_t *obj)
