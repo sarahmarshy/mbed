@@ -171,12 +171,37 @@ int spi_master_block_write(spi_t *obj, const char *tx_buffer, int tx_length, cha
         nordic_nrf5_owner[instance] = obj;
     }
     int max = (rx_length < tx_length) ? tx_length : rx_length;
-    for(int i = 0; i < max; i++) {
-        if (i < tx_length)
-            rx_buffer[i] = spi_master_write(obj, tx_buffer[i]);
-        else
-            rx_buffer[i] = spi_master_write(obj, 255);
+    
+    int tx_offset = 0;
+    int rx_offset = 0;
+    // The following code will write/read the data 255 bytes at a time
+    // Check if the tx_length > 255
+    while(tx_length > 255) {
+        // Read all of rx_length or 255 
+        int rx_read_ln = rx_length > 255 ? 255 : rx_length;
+        nrf_drv_spi_transfer(&(spi_obj->spi_drv_inst), (const uint8_t*)(tx_buffer+tx_offset), 255, (uint8_t *)(rx_buffer+rx_offset), rx_read_ln);
+        tx_offset += 255;
+        tx_length -= 255;
+        rx_length -= rx_read_ln;
+        rx_offset += rx_read_ln;
     }
+    // Handle extra tx/rx data
+    if(tx_length > 0) {
+        int rx_read_ln = rx_length > 255 ? 255 : rx_length;
+        rx_offset = rx_read_ln > 0 ? rx_offset : 0;
+        nrf_drv_spi_transfer(&(spi_obj->spi_drv_inst), (const uint8_t*)(tx_buffer+tx_offset), tx_length, (uint8_t*)(rx_buffer+rx_offset), rx_read_ln);
+        rx_length -= rx_read_ln;
+    }
+    
+    if (rx_length > 0) { 
+        while(rx_length > 255){
+            nrf_drv_spi_transfer(&(spi_obj->spi_drv_inst), (const uint8_t*)tx_buffer, 0, (uint8_t*)(rx_buffer+rx_offset), 255);
+            rx_offset += 255;
+            rx_length -= 255;
+        }
+        nrf_drv_spi_transfer(&(spi_obj->spi_drv_inst), (const uint8_t*)tx_buffer, 0, (uint8_t*)(rx_buffer+rx_offset), rx_length);
+    }
+    
     return max; 
 } 
 
