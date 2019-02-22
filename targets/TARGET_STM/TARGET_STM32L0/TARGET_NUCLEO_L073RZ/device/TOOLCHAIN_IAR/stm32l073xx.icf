@@ -1,11 +1,10 @@
-#if !defined(MBED_APP_START)
-  #define MBED_APP_START 0x08000000
-#endif
+if (!isdefinedsymbol(MBED_APP_START)) { 
+    define symbol MBED_APP_START = 0x08000000; 
+}
 
- #if !defined(MBED_APP_SIZE)
-   /* [ROM = 192kb = 0x30000] */
-  #define MBED_APP_SIZE 0x30000
-#endif
+if (!isdefinedsymbol(MBED_APP_SIZE)) { 
+    define symbol MBED_APP_SIZE = 0x3000; 
+}
 
 define symbol __intvec_start__     = MBED_APP_START;
 define symbol __region_ROM_start__ = MBED_APP_SIZE;
