@@ -143,7 +143,7 @@ static SingletonPtr<PlatformMutex> mutex;
 static bool is_kv_config_initialize = false;
 static kvstore_config_t kvstore_config;
 
-#define INTERNAL_BLOCKDEVICE_NAME FLASHIAP
+#define INTERNAL_BLOCKDEVICE_NAME MBED_CONF_APP_STORAGE_FILESYSTEM_BLOCKDEVICE
 
 #define STR_EXPAND(tok) #tok
 #define STR(tok) STR_EXPAND(tok)
@@ -1084,9 +1084,11 @@ MBED_WEAK int kv_init_storage_config()
     int ret = MBED_SUCCESS;
 
     // We currently have no supported configuration without internal storage
+/**
 #ifndef COMPONENT_FLASHIAP
     return MBED_ERROR_UNSUPPORTED;
 #endif
+**/
 
     mutex->lock();
 
