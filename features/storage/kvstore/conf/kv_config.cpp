@@ -143,7 +143,7 @@ static SingletonPtr<PlatformMutex> mutex;
 static bool is_kv_config_initialize = false;
 static kvstore_config_t kvstore_config;
 
-#define INTERNAL_BLOCKDEVICE_NAME MBED_CONF_APP_STORAGE_FILESYSTEM_BLOCKDEVICE
+#define INTERNAL_BLOCKDEVICE_NAME MBED_CONF_STORAGE_FILESYSTEM_BLOCKDEVICE
 
 #define STR_EXPAND(tok) #tok
 #define STR(tok) STR_EXPAND(tok)
